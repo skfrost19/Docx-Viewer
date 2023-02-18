@@ -9,14 +9,13 @@ function renderDocx(docxPath: string) {
 		// remove "Test VSCODE" from the html
 		html = html.replace("Test VSCODE", "");
 		var messages = result.messages; // Any messages, such as warnings during conversion
-		// craete a new panel to display the html
-		console.log(messages);
-
+		// if there are any messages, show the first one
 		if (messages.length > 0) {
 			vscode.window.showErrorMessage(messages[0].message);
 			return null;
+			
 		}
-
+		// craete a new panel to display the html
 		const panel = vscode.window.createWebviewPanel(
 			'docxreader',
 			'Docx Reader',
