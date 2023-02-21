@@ -1,5 +1,5 @@
 # Docx Viewer Extension for Visual Studio Code
-The Docx Viewer Extension for Visual Studio Code allows you to view and edit Docx files directly within the editor. With this extension, you no longer need to switch between multiple applications or install a separate word processor to view and make changes to your documents.
+The Docx Viewer Extension for Visual Studio Code allows you to view Docx files directly within the editor. With this extension, you no longer need to switch between multiple applications or install a separate word processor to view your documents.
 
 ## Features
 * Preview Docx files within the editor
@@ -11,9 +11,9 @@ To open a Docx file, simply navigate to the file in your project directory right
 ## How to Install
 * Launch Visual Studio Code.
 * Press Ctrl + Shift + X or Cmd + Shift + X to open the Extensions tab.
-* Search for "DocxReader" and select it or follow [this]("https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader") link.  
+* Search for "DocxReader" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.  
 * Click "Install".  
-After the installation is complete, restart Visual Studio Code.
+* After the installation is complete, restart Visual Studio Code.
 
 ## Requirements
 This extension requires Visual Studio Code version 1.60 or higher to be installed.
@@ -25,7 +25,7 @@ This extension requires Visual Studio Code version 1.60 or higher to be installe
 
 ## Feedback and Contributions
 * Feedback, bug reports, and contributions are always welcome! 
-* If you have any suggestions or issues, please open a new issue on the [GitHub repository]("https://github.com/skfrost19/Docx-Viewer") or submit a pull request.
+* If you have any suggestions or issues, please open a new issue on the <a href = "https://github.com/skfrost19/Docx-Viewer"> GitHub</a> repository or submit a pull request.
 
 ## License
-This extension is licensed under the MIT License.
+This extension is licensed under the <a href = "LICENSE.txt"> MIT </a> License.
