@@ -1,10 +1,10 @@
 {
   "name": "docxreader",
-  "displayName": "DocxReader",
+  "displayName": "Docx Reader",
   "publisher": "ShahilKumar",
   "description": "Docx Rendered inside VSCode",
   "icon": "assets/icons/icon.png",
-  "respository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer"
   },
