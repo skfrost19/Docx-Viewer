@@ -8,7 +8,7 @@ The Docx Viewer Extension for Visual Studio Code allows you to view Docx files d
 ## Usage
 To open a Docx file, simply navigate to the file in your project directory right click on it and select the option "Docx Viewer" from the context menu.
 
-<div style="width:100%;height:0;padding-bottom:56%;position:relative;"><iframe src="https://giphy.com/embed/d0jSPIYAGeMFhLrcQ0" width="100%" height="100%" style="position:absolute" frameBorder="0" class="giphy-embed" allowFullScreen></iframe></div>
+![](https://github.com/skfrost19/Docx-Viewer/blob/main/assets/icons/sample.gif)
 
 
 ## How to Install
