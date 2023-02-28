@@ -14,7 +14,7 @@ To open a Docx file, simply navigate to the file in your project directory right
 ## How to Install
 * Launch Visual Studio Code.
 * Press Ctrl + Shift + X or Cmd + Shift + X to open the Extensions tab.
-* Search for "DocxReader" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.  
+* Search for "Docx Reader" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.  
 * Click "Install".  
 * After the installation is complete, restart Visual Studio Code.
 
