@@ -1,3 +1,12 @@
+![Installs](https://img.shields.io/visual-studio-marketplace/i/ShahilKumar.docxreader.svg)
+![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ShahilKumar.docxreader.svg)
+![Rating](https://img.shields.io/visual-studio-marketplace/r/ShahilKumar.docxreader.svg)
+![LICENSE](https://img.shields.io/github/license/skfrost19/Docx-Viewer.svg)
+[![GitHub Release](https://img.shields.io/github/release/skfrost19/Docx-Viewer.svg)](https://github.com/skfrost19/Docx-Viewer/releases)
+![Open Issues](https://img.shields.io/github/issues-raw/skfrost19/Docx-Viewer.svg)
+![Closed Issues](https://img.shields.io/github/issues-closed-raw/skfrost19/Docx-Viewer.svg)
+
+
 # Docx Viewer Extension for Visual Studio Code
 The Docx Viewer Extension for Visual Studio Code allows you to view Docx files directly within the editor. With this extension, you no longer need to switch between multiple applications or install a separate word processor to view your documents.
 
