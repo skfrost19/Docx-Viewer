@@ -1,5 +1,5 @@
 # Docx Viewer Extension for Visual Studio Code
-![Installs](https://img.shields.io/visual-studio-marketplace/i/ShahilKumar.docxreader.svg)
+![Installs](https://img.shields.io/visual-studio-marketplace/i/ShahilKumar.docxreader)
 ![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/ShahilKumar.docxreader.svg)
 ![Rating](https://img.shields.io/visual-studio-marketplace/r/ShahilKumar.docxreader.svg)
 ![LICENSE](https://img.shields.io/github/license/skfrost19/Docx-Viewer.svg)
