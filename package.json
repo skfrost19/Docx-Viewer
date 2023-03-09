@@ -1,6 +1,6 @@
 {
   "name": "docxreader",
-  "displayName": "Docx Reader",
+  "displayName": "Docx Viewer",
   "publisher": "ShahilKumar",
   "description": "Docx Rendered inside VSCode",
   "icon": "assets/icons/icon.png",
