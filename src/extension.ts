@@ -1,41 +1,58 @@
 import * as vscode from 'vscode';
+import * as mammoth from 'mammoth';
 
-const mammoth = require('mammoth');
 
-function renderDocx(docxPath: string) {
+async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 	// convert the docx to html
-	mammoth.convertToHtml({path: docxPath}).then (function (result: any) {
-		var html = result.value; // The generated HTML
-		// remove "Test VSCODE" from the html
-		html = html.replace("Test VSCODE", "");
-		// craete a new panel to display the html
-		const panel = vscode.window.createWebviewPanel(
-			'docxreader',
-			'Docx Reader',
-			vscode.ViewColumn.One,
-			{
-				// Enable javascript in the webview
-				enableScripts: true
-			}
-		);
-		// set the html content of the panel
-		panel.webview.html = html;
-	}
-	).done();
-}	
-
-export function activate(context: vscode.ExtensionContext) {
-	// use command docxreader.docxTohtml to convert docx to html
-	let disposable = vscode.commands.registerCommand('docxreader.docxToHtml', (uri: vscode.Uri) => {
-		// take the file path from the active editor not the active document
-		const editor = uri.fsPath;
-		// render the html in a separate panel
-		renderDocx(editor);
-	}
-	);
-
-	context.subscriptions.push(disposable);
+	const result = await mammoth.convertToHtml({path: docxPath});
+	const html = result.value; // The generated HTML
+	panel.webview.html = html;
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {}
+// create a custom editor panel for docx files and register the command docxreader.docxToHtml
+
+class DocxEditorProvider implements vscode.CustomEditorProvider {
+    
+    private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<vscode.CustomDocument>>();
+    public readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
+
+    public async resolveCustomEditor(document: vscode.CustomDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
+        // Render the initial content for the webview
+        renderDocx(document.uri.fsPath, webviewPanel);
+
+    }
+
+    public saveCustomDocument(document: vscode.CustomDocument, cancellation: vscode.CancellationToken): Thenable<void> {
+        throw new Error('Not Supported');
+    }
+
+    public saveCustomDocumentAs(document: vscode.CustomDocument, destination: vscode.Uri, cancellation: vscode.CancellationToken): Thenable<void> {
+        throw new Error('Not Supported');
+    }
+
+    public revertCustomDocument(document: vscode.CustomDocument, cancellation: vscode.CancellationToken): Thenable<void> {
+        throw new Error('Not Supported');
+    }
+
+    public backupCustomDocument(document: vscode.CustomDocument, context: vscode.CustomDocumentBackupContext, cancellation: vscode.CancellationToken): Thenable<vscode.CustomDocumentBackup> {
+        throw new Error('Not Supported');
+    }
+
+    public openCustomDocument(uri: vscode.Uri, openContext: vscode.CustomDocumentOpenContext, token: vscode.CancellationToken): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
+        return {
+            uri,
+            dispose() { }
+        };
+    }
+  
+}
+
+export function activate(context: vscode.ExtensionContext) {
+    // Register the custom editor provider
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider('docxreader.docxEditor', new DocxEditorProvider(), {
+        webviewOptions: {
+            retainContextWhenHidden: true,
+        },
+        supportsMultipleEditorsPerDocument: false
+    }));
+}

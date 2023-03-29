@@ -8,33 +8,27 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer"
   },
-  "version": "0.4.7",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+    "customEditors": [
       {
-        "command": "docxreader.helloWorld",
-        "title": "Hello World"
-      },
-      {
-        "command": "docxreader.docxToHtml",
-        "title": "Docx Viewer"
+        "viewType": "docxreader.docxEditor",
+        "displayName": "Docx Reader",
+        "selector": [
+          {
+            "filenamePattern": "*.docx"
+          }
+        ]
       }
-    ],
-    "menus": {
-      "explorer/context": [
-        {
-          "command": "docxreader.docxToHtml",
-          "when": "resourceExtname == .docx"
-        }
-      ]
-    }
+    ]
+
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

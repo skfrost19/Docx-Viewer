@@ -13,3 +13,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Removed Warnings
 - May produced gibberish output
+
+## [1.0.0]
+
+- Docx can be opened in the editor just like any other file.
