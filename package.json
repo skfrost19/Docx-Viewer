@@ -1,14 +1,14 @@
 {
   "name": "docxreader",
-  "displayName": "Docx Viewer/Reader",
+  "displayName": "Docx/ODT Viewer",
   "publisher": "ShahilKumar",
-  "description": "Docx Rendered inside VSCode",
+  "description": "Docx/ODT files Rendered inside VSCode",
   "icon": "assets/icons/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer"
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "engines": {
     "vscode": "^1.75.0"
   },

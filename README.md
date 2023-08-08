@@ -11,8 +11,8 @@ The Docx Viewer Extension for Visual Studio Code allows you to view Docx files d
 
 ## Features
 
-- Preview Docx files within the editor
-- Easy installation and setup
+-   Preview Docx / ODT files within the editor
+-   Easy installation and setup
 
 ## Usage
 
@@ -22,11 +22,11 @@ To open a Docx file, simply navigate to the file and click to open it.
 
 ## How to Install
 
-- Launch Visual Studio Code.
-- Press Ctrl + Shift + X or Cmd + Shift + X to open the Extensions tab.
-- Search for "Docx Viewer" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.
-- Click "Install".
-- After the installation is complete, restart Visual Studio Code.
+-   Launch Visual Studio Code.
+-   Press Ctrl + Shift + X or Cmd + Shift + X to open the Extensions tab.
+-   Search for "Docx Viewer" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.
+-   Click "Install".
+-   After the installation is complete, restart Visual Studio Code.
 
 ## Requirements
 
@@ -34,15 +34,18 @@ This extension requires Visual Studio Code version 1.60 or higher to be installe
 
 ## Known Issues
 
-- Some complex formatting may not be supported.
-- Changes to the document may not be saved in the original Docx format.
-- The extension may not work properly with extremely large documents.
+-   Some complex formatting may not be supported.
+-   Changes to the document may not be saved in the original Docx format.
+-   The extension may not work properly with extremely large documents.
 
 ## Feedback and Contributions
 
-- Feedback, bug reports, and contributions are always welcome!
-- If you have any suggestions or issues, please open a new issue on the <a href = "https://github.com/skfrost19/Docx-Viewer"> GitHub</a> repository or submit a pull request.
-- Star the repository if you like the extension!
+-   Feedback, bug reports, and contributions are always welcome!
+-   If you have any suggestions or issues, please open a new issue on the <a href = "https://github.com/skfrost19/Docx-Viewer"> GitHub</a> repository or submit a pull request.
+
+## Support
+
+-   Star the repository if you like the extension!
 
 ## License
 
