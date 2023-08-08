@@ -1,12 +1,29 @@
 import * as vscode from 'vscode';
 import * as mammoth from 'mammoth';
+const odt2html = require('odt2html');
 
 
 async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 	// convert the docx to html
-	const result = await mammoth.convertToHtml({path: docxPath});
-	const html = result.value; // The generated HTML
-	panel.webview.html = html;
+
+    if (docxPath.endsWith(".odt")){
+        odt2html.toHTML({
+            path: docxPath,
+        })
+        .then(function (html: string) {
+            panel.webview.html = html;
+        })
+        .catch(function (err: any) {
+            console.error(err);
+        }
+        );
+    }
+
+    else {
+        const result = await mammoth.convertToHtml({path: docxPath});
+        const html = result.value; // The generated HTML
+        panel.webview.html = html;
+    }
 }
 
 // create a custom editor panel for docx files and register the command docxreader.docxToHtml

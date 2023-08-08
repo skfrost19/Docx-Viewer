@@ -24,11 +24,13 @@
         "selector": [
           {
             "filenamePattern": "*.docx"
+          },
+          {
+            "filenamePattern": "*.odt"
           }
         ]
       }
     ]
-
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -54,6 +56,7 @@
   "dependencies": {
     "docx-to-html": "^1.0.1",
     "html": "^1.0.0",
-    "mammoth-math": "^0.0.2"
+    "mammoth-math": "^0.0.2",
+    "odt2html": "^1.0.1"
   }
 }
