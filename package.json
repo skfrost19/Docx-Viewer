@@ -6,7 +6,7 @@
   "icon": "assets/icons/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/skfrost19/Docx-Viewer"
+    "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
   "version": "1.1.0",
   "engines": {

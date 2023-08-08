@@ -1,4 +1,4 @@
-# Change Log
+# ChangeLog
 
 All notable changes to the "docxreader" extension will be documented in this file.
 
