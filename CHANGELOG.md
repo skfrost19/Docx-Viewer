@@ -25,3 +25,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [1.1.2]
 
 -   The Docx / ODT output will retain the vscode font.
+
+## [1.1.3]
+
+-   Added Custom Font Support

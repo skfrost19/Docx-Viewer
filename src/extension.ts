@@ -5,10 +5,9 @@ const odt2html = require('odt2html');
 
 async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 	// convert the docx to html
-
-    // get font vscode currently using
-    const font = vscode.workspace.getConfiguration('editor').get('fontFamily');
-
+    // get font from docxreader.font setting
+    const font = vscode.workspace.getConfiguration('docxreader').get('font') || "Arial";
+    console.log(font);
     if (docxPath.endsWith(".odt")){
         odt2html.toHTML({
             path: docxPath,
@@ -30,7 +29,6 @@ async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
         
         // adding font to html
         html += `<style>body {font-family: ${font};}</style>`;
-        console.log(html);
         panel.webview.html = html;
     }
 }
@@ -80,5 +78,10 @@ export function activate(context: vscode.ExtensionContext) {
             retainContextWhenHidden: true,
         },
         supportsMultipleEditorsPerDocument: false
+    }));
+
+    // Add a command to open the user's configuration
+    context.subscriptions.push(vscode.commands.registerCommand('docxreader.openConfig', () => {
+        vscode.commands.executeCommand('workbench.action.openSettings', '@ext:shahilkumar.docxreader');
     }));
 }

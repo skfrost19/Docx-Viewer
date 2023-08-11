@@ -20,6 +20,11 @@ To open a Docx / ODT file, simply navigate to the file and click to open it.
 
 ![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjdkOTlmMzViMjhjNDg3ZDVjZmZlN2U0NzIzODU4ZmY4NzkwNWM1ZSZjdD1n/9jfRb8jEVDPeJut8CJ/giphy.gif)
 
+## Extension Settings
+
+-   To change the font, open the Command Palette (Ctrl + Shift + P or Cmd + Shift + P) and search for "Open Docx Reader Configuration".
+-   In the configuration file, change the font to your desired font.
+
 ## How to Install
 
 -   Launch Visual Studio Code.
