@@ -7,7 +7,6 @@ async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 	// convert the docx to html
     // get font from docxreader.font setting
     const font = vscode.workspace.getConfiguration('docxreader').get('font') || "Arial";
-    console.log(font);
     if (docxPath.endsWith(".odt")){
         odt2html.toHTML({
             path: docxPath,
