@@ -6,11 +6,16 @@ const odt2html = require('odt2html');
 async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 	// convert the docx to html
 
+    // get font vscode currently using
+    const font = vscode.workspace.getConfiguration('editor').get('fontFamily');
+
     if (docxPath.endsWith(".odt")){
         odt2html.toHTML({
             path: docxPath,
         })
         .then(function (html: string) {
+            // adding font to html
+            html += `<style>body {font-family: ${font};}</style>`;
             panel.webview.html = html;
         })
         .catch(function (err: any) {
@@ -21,7 +26,11 @@ async function renderDocx(docxPath: string, panel: vscode.WebviewPanel) {
 
     else {
         const result = await mammoth.convertToHtml({path: docxPath});
-        const html = result.value; // The generated HTML
+        var html = result.value; // The generated HTML
+        
+        // adding font to html
+        html += `<style>body {font-family: ${font};}</style>`;
+        console.log(html);
         panel.webview.html = html;
     }
 }

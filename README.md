@@ -7,7 +7,7 @@
 [![GitHub Release](https://img.shields.io/github/release/skfrost19/Docx-Viewer.svg)](https://github.com/skfrost19/Docx-Viewer/releases)
 ![Open Issues](https://img.shields.io/github/issues-raw/skfrost19/Docx-Viewer.svg)
 ![Closed Issues](https://img.shields.io/github/issues-closed-raw/skfrost19/Docx-Viewer.svg)<br><br>
-The Docx Viewer Extension for Visual Studio Code allows you to view Docx files directly within the editor. With this extension, you no longer need to switch between multiple applications or install a separate word processor to view your documents.
+The Docx Viewer Extension for Visual Studio Code allows you to view Docx / ODT files directly within the editor. With this extension, you no longer need to switch between multiple applications or install a separate Word Processor or Libre Office Client to view your documents.
 
 ## Features
 
@@ -16,7 +16,7 @@ The Docx Viewer Extension for Visual Studio Code allows you to view Docx files d
 
 ## Usage
 
-To open a Docx file, simply navigate to the file and click to open it.
+To open a Docx / ODT file, simply navigate to the file and click to open it.
 
 ![](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjdkOTlmMzViMjhjNDg3ZDVjZmZlN2U0NzIzODU4ZmY4NzkwNWM1ZSZjdD1n/9jfRb8jEVDPeJut8CJ/giphy.gif)
 
@@ -24,7 +24,7 @@ To open a Docx file, simply navigate to the file and click to open it.
 
 -   Launch Visual Studio Code.
 -   Press Ctrl + Shift + X or Cmd + Shift + X to open the Extensions tab.
--   Search for "Docx Viewer" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.
+-   Search for "Docx Viewer" or "ODT Viewer" and select it or follow <a href = "https://marketplace.visualstudio.com/items?itemName=ShahilKumar.docxreader"> this </a> link.
 -   Click "Install".
 -   After the installation is complete, restart Visual Studio Code.
 
