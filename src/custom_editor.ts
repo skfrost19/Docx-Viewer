@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { renderDocuments } from './renderer';
+import { renderDocuments } from './render';
 
 // create a custom editor panel for docx files and register the command docxreader.docxToHtml
 
