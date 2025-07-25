@@ -1,0 +1,430 @@
+/* Modern Document Viewer Styles */
+:root {
+  --vscode-font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+  --viewer-bg: var(--vscode-editor-background, #ffffff);
+  --viewer-fg: var(--vscode-editor-foreground, #000000);
+  --viewer-border: var(--vscode-panel-border, #cccccc);
+  --viewer-hover: var(--vscode-list-hoverBackground, #f0f0f0);
+  --viewer-active: var(--vscode-list-activeSelectionBackground, #0078d4);
+  --viewer-shadow: rgba(0, 0, 0, 0.1);
+  --viewer-radius: 4px;
+  --viewer-padding: 16px;
+  --outline-width: 250px;
+}
+
+/* Dark theme support */
+body.vscode-dark {
+  --viewer-bg: var(--vscode-editor-background, #1e1e1e);
+  --viewer-fg: var(--vscode-editor-foreground, #ffffff);
+  --viewer-border: var(--vscode-panel-border, #3c3c3c);
+  --viewer-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+  --viewer-shadow: rgba(255, 255, 255, 0.1);
+}
+
+/* High contrast theme support */
+body.vscode-high-contrast {
+  --viewer-border: var(--vscode-contrastBorder, #ffffff);
+  --viewer-shadow: none;
+}
+
+/* Container */
+.docx-viewer-container {
+  display: flex;
+  height: 100vh;
+  font-family: var(--vscode-font-family);
+  background: var(--viewer-bg);
+  color: var(--viewer-fg);
+  overflow: hidden;
+}
+
+/* Toolbar */
+.docx-toolbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--viewer-bg);
+  border-bottom: 1px solid var(--viewer-border);
+  border-left: 1px solid var(--viewer-border);
+  border-radius: 0 0 0 var(--viewer-radius);
+  box-shadow: 0 2px 8px var(--viewer-shadow);
+}
+
+.docx-toolbar button {
+  background: transparent;
+  border: 1px solid var(--viewer-border);
+  color: var(--viewer-fg);
+  padding: 6px 12px;
+  border-radius: var(--viewer-radius);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.docx-toolbar button:hover {
+  background: var(--viewer-hover);
+}
+
+.docx-toolbar button:active {
+  background: var(--viewer-active);
+  color: white;
+}
+
+.docx-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Outline Panel */
+.docx-outline {
+  width: var(--outline-width);
+  background: var(--viewer-bg);
+  border-right: 1px solid var(--viewer-border);
+  overflow-y: auto;
+  padding: var(--viewer-padding);
+  transition: margin-left 0.3s ease;
+}
+
+.docx-outline.hidden {
+  margin-left: calc(-1 * var(--outline-width));
+}
+
+.docx-outline h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--viewer-fg);
+  border-bottom: 1px solid var(--viewer-border);
+  padding-bottom: 8px;
+}
+
+.docx-outline-item {
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: var(--viewer-radius);
+  font-size: 12px;
+  margin: 2px 0;
+  transition: background 0.2s ease;
+}
+
+.docx-outline-item:hover {
+  background: var(--viewer-hover);
+}
+
+.docx-outline-item.active {
+  background: var(--viewer-active);
+  color: white;
+}
+
+.docx-outline-item.level-1 { padding-left: 8px; font-weight: 600; }
+.docx-outline-item.level-2 { padding-left: 20px; }
+.docx-outline-item.level-3 { padding-left: 32px; }
+.docx-outline-item.level-4 { padding-left: 44px; }
+.docx-outline-item.level-5 { padding-left: 56px; }
+.docx-outline-item.level-6 { padding-left: 68px; }
+
+/* Document Content */
+.docx-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--viewer-padding);
+  background: var(--viewer-bg);
+}
+
+.docx-document {
+  max-width: 210mm; /* A4 width */
+  margin: 0 auto;
+  background: var(--vscode-editor-background, white);
+  box-shadow: 0 0 20px var(--viewer-shadow);
+  border-radius: var(--viewer-radius);
+  padding: 40px;
+  line-height: 1.6;
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+}
+
+/* Dark theme document background */
+body.vscode-dark .docx-document {
+  background: var(--vscode-editor-background, #2d2d30);
+}
+
+/* Document Typography */
+.docx-document h1,
+.docx-document h2,
+.docx-document h3,
+.docx-document h4,
+.docx-document h5,
+.docx-document h6 {
+  margin: 1.5em 0 0.5em 0;
+  line-height: 1.4;
+}
+
+.docx-document h1 { font-size: 2em; }
+.docx-document h2 { font-size: 1.7em; }
+.docx-document h3 { font-size: 1.4em; }
+.docx-document h4 { font-size: 1.2em; }
+.docx-document h5 { font-size: 1.1em; }
+.docx-document h6 { font-size: 1em; }
+
+.docx-document p {
+  margin: 0.8em 0;
+  text-align: justify;
+}
+
+.docx-document table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+}
+
+.docx-document table td,
+.docx-document table th {
+  border: 1px solid var(--viewer-border);
+  padding: 8px 12px;
+}
+
+.docx-document table th {
+  background: var(--viewer-hover);
+  font-weight: 600;
+}
+
+.docx-document img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--viewer-radius);
+  box-shadow: 0 2px 8px var(--viewer-shadow);
+  margin: 1em 0;
+}
+
+.docx-document ul,
+.docx-document ol {
+  padding-left: 2em;
+  margin: 0.8em 0;
+}
+
+.docx-document li {
+  margin: 0.4em 0;
+}
+
+.docx-document blockquote {
+  border-left: 4px solid var(--viewer-active);
+  margin: 1em 0;
+  padding: 0.5em 0 0.5em 1em;
+  background: var(--viewer-hover);
+  border-radius: 0 var(--viewer-radius) var(--viewer-radius) 0;
+}
+
+.docx-document code {
+  background: var(--viewer-hover);
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.docx-document pre {
+  background: var(--viewer-hover);
+  padding: 1em;
+  border-radius: var(--viewer-radius);
+  overflow-x: auto;
+  border-left: 4px solid var(--viewer-active);
+}
+
+/* Zoom levels */
+.docx-document.zoom-50 { transform: scale(0.5); }
+.docx-document.zoom-75 { transform: scale(0.75); }
+.docx-document.zoom-90 { transform: scale(0.9); }
+.docx-document.zoom-100 { transform: scale(1.0); }
+.docx-document.zoom-110 { transform: scale(1.1); }
+.docx-document.zoom-125 { transform: scale(1.25); }
+.docx-document.zoom-150 { transform: scale(1.5); }
+.docx-document.zoom-200 { transform: scale(2.0); }
+.docx-document.zoom-300 { transform: scale(3.0); }
+
+/* Search functionality */
+.docx-search {
+  position: fixed;
+  top: 50px;
+  right: 10px;
+  z-index: 999;
+  display: none;
+  background: var(--viewer-bg);
+  border: 1px solid var(--viewer-border);
+  border-radius: var(--viewer-radius);
+  padding: 8px;
+  box-shadow: 0 4px 12px var(--viewer-shadow);
+}
+
+.docx-search.visible {
+  display: flex;
+  gap: 4px;
+}
+
+.docx-search input {
+  background: var(--viewer-bg);
+  border: 1px solid var(--viewer-border);
+  color: var(--viewer-fg);
+  padding: 4px 8px;
+  border-radius: var(--viewer-radius);
+  font-size: 12px;
+  width: 200px;
+}
+
+.docx-search button {
+  background: transparent;
+  border: 1px solid var(--viewer-border);
+  color: var(--viewer-fg);
+  padding: 4px 8px;
+  border-radius: var(--viewer-radius);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.docx-search button:hover {
+  background: var(--viewer-hover);
+}
+
+/* Highlight search results */
+.search-highlight {
+  background: yellow;
+  color: black;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+body.vscode-dark .search-highlight {
+  background: #ff6600;
+  color: white;
+}
+
+/* Loading state */
+.docx-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 14px;
+  color: var(--viewer-fg);
+}
+
+.docx-loading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--viewer-border);
+  border-top: 2px solid var(--viewer-active);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.docx-error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  text-align: center;
+  color: var(--vscode-errorForeground, #f85149);
+}
+
+.docx-error h2 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.docx-error p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  :root {
+    --outline-width: 200px;
+    --viewer-padding: 12px;
+  }
+  
+  .docx-document {
+    padding: 20px;
+  }
+  
+  .docx-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+/* Print styles */
+@media print {
+  .docx-toolbar,
+  .docx-outline,
+  .docx-search {
+    display: none !important;
+  }
+  
+  .docx-content {
+    padding: 0;
+  }
+  
+  .docx-document {
+    box-shadow: none;
+    max-width: none;
+    transform: none !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.docx-toolbar button:focus,
+.docx-outline-item:focus,
+.docx-search input:focus,
+.docx-search button:focus {
+  outline: 2px solid var(--vscode-focusBorder, #0078d4);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+.docx-content {
+  scroll-behavior: smooth;
+}
+
+/* Selection styles */
+::selection {
+  background: var(--vscode-editor-selectionBackground, #add6ff);
+  color: var(--vscode-editor-selectionForeground);
+}
+
+/* Scrollbar styles */
+.docx-content::-webkit-scrollbar,
+.docx-outline::-webkit-scrollbar {
+  width: 10px;
+}
+
+.docx-content::-webkit-scrollbar-track,
+.docx-outline::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.docx-content::-webkit-scrollbar-thumb,
+.docx-outline::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 5px;
+}
+
+.docx-content::-webkit-scrollbar-thumb:hover,
+.docx-outline::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
