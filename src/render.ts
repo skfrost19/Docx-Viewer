@@ -76,7 +76,6 @@ export class DocumentRenderer {
             <button id="resetZoom" title="Reset Zoom">⚊</button>
             <button id="toggleOutline" title="Toggle Outline">${this.outlineVisible ? '◧' : '◨'}</button>
             <button id="searchBtn" title="Search">🔍</button>
-            <button id="printBtn" title="Print">🖨</button>
         </div>
         
         <!-- Search Panel -->
@@ -667,41 +666,6 @@ export class DocumentRenderer {
                 }
             }
             
-            // Print functionality
-            document.getElementById('printBtn').addEventListener('click', () => {
-                printDocument();
-            });
-            
-            function printDocument() {
-                // Create a new window for printing
-                const printWindow = window.open('', '_blank');
-                if (!printWindow) {
-                    // Fallback: try direct print
-                    window.print();
-                    return;
-                }
-                
-                // Get the document content
-                const documentContent = document.getElementById('document').innerHTML;
-                const documentStyles = document.querySelector('style').innerHTML;
-                
-                // Create print-friendly HTML
-                const printHtml = '<!DOCTYPE html>' +
-                    '<html><head><title>Print Document</title>' +
-                    '<style>' + documentStyles +
-                    'body { margin: 0; padding: 20px; background: white !important; }' +
-                    '.docx-document { max-width: none !important; margin: 0 !important; padding: 20px !important; box-shadow: none !important; background: white !important; transform: none !important; }' +
-                    '.docx-toolbar, .docx-outline, .docx-search { display: none !important; }' +
-                    '@media print { body { margin: 0; padding: 0; } .docx-document { padding: 0; } }' +
-                    '</style></head><body>' +
-                    '<div class="docx-document">' + documentContent + '</div>' +
-                    '<script>window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 500); };</script>' +
-                    '</body></html>';
-                
-                printWindow.document.write(printHtml);
-                printWindow.document.close();
-            }
-            
             // Handle messages from extension
             window.addEventListener('message', event => {
                 const message = event.data;
@@ -740,10 +704,6 @@ export class DocumentRenderer {
                         case 'f':
                             e.preventDefault();
                             document.getElementById('searchBtn').click();
-                            break;
-                        case 'p':
-                            e.preventDefault();
-                            document.getElementById('printBtn').click();
                             break;
                     }
                 }
