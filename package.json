@@ -74,6 +74,11 @@
         "command": "docxreader.toggleOutline",
         "title": "Toggle Outline",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "docxreader.toggleTheme",
+        "title": "Toggle Theme",
+        "icon": "$(color-mode)"
       }
     ],
     "customEditors": [
@@ -112,6 +117,11 @@
           "command": "docxreader.toggleOutline",
           "when": "activeCustomEditorId == docxreader.docxEditor",
           "group": "navigation@4"
+        },
+        {
+          "command": "docxreader.toggleTheme",
+          "when": "activeCustomEditorId == docxreader.docxEditor",
+          "group": "navigation@5"
         }
       ]
     }

@@ -6,6 +6,7 @@ import { OdtHandler } from './odt_handler';
 export class DocumentRenderer {
     private static currentZoom: number = 1.0;
     private static outlineVisible: boolean = true;
+    private static currentTheme: string = 'auto';
 
     public static async renderDocument(docxPath: string, panel: vscode.WebviewPanel) {
         try {
@@ -18,6 +19,7 @@ export class DocumentRenderer {
             const theme = config.get('theme', 'auto');
             this.currentZoom = config.get('zoomLevel', 1.0);
             this.outlineVisible = config.get('showOutline', true);
+            this.currentTheme = theme;
 
             let documentHtml = '';
             let outline: OutlineItem[] = [];
@@ -47,9 +49,9 @@ export class DocumentRenderer {
 
         // Determine theme class
         let themeClass = '';
-        if (theme === 'dark') {
+        if (this.currentTheme === 'dark') {
             themeClass = 'vscode-dark';
-        } else if (theme === 'light') {
+        } else if (this.currentTheme === 'light') {
             themeClass = 'vscode-light';
         }
         // 'auto' uses default VS Code theme detection
@@ -75,6 +77,7 @@ export class DocumentRenderer {
             <button id="zoomIn" title="Zoom In">🔍+</button>
             <button id="resetZoom" title="Reset Zoom">⚊</button>
             <button id="toggleOutline" title="Toggle Outline">${this.outlineVisible ? '◧' : '◨'}</button>
+            <button id="themeToggle" title="Toggle Theme">${this.currentTheme === 'dark' ? '☀️' : '🌙'}</button>
             <button id="searchBtn" title="Search">🔍</button>
         </div>
         
@@ -247,14 +250,27 @@ export class DocumentRenderer {
             --viewer-active: var(--vscode-list-activeSelectionBackground, #0078d4);
             --viewer-shadow: rgba(0, 0, 0, 0.1);
             --outline-width: 250px;
+            --document-bg: #ffffff;
+        }
+        
+        body.vscode-light {
+            --viewer-bg: #ffffff;
+            --viewer-fg: #000000;
+            --viewer-border: #cccccc;
+            --viewer-hover: #f0f0f0;
+            --viewer-active: #0078d4;
+            --viewer-shadow: rgba(0, 0, 0, 0.1);
+            --document-bg: #ffffff;
         }
         
         body.vscode-dark {
-            --viewer-bg: var(--vscode-editor-background, #1e1e1e);
-            --viewer-fg: var(--vscode-editor-foreground, #ffffff);
-            --viewer-border: var(--vscode-panel-border, #3c3c3c);
-            --viewer-hover: var(--vscode-list-hoverBackground, #2a2d2e);
+            --viewer-bg: #1e1e1e;
+            --viewer-fg: #ffffff;
+            --viewer-border: #3c3c3c;
+            --viewer-hover: #2a2d2e;
+            --viewer-active: #0078d4;
             --viewer-shadow: rgba(255, 255, 255, 0.1);
+            --document-bg: #2d2d30;
         }
         
         * { box-sizing: border-box; }
@@ -351,7 +367,8 @@ export class DocumentRenderer {
         .docx-document {
             max-width: 210mm;
             margin: 0 auto;
-            background: var(--vscode-editor-background, white);
+            background: var(--document-bg);
+            color: var(--viewer-fg);
             box-shadow: 0 0 20px var(--viewer-shadow);
             border-radius: 4px;
             padding: 40px;
@@ -359,8 +376,6 @@ export class DocumentRenderer {
             transform-origin: top center;
             transition: transform 0.2s ease;
         }
-        
-        body.vscode-dark .docx-document { background: var(--vscode-editor-background, #2d2d30); }
         
         .docx-document h1, .docx-document h2, .docx-document h3,
         .docx-document h4, .docx-document h5, .docx-document h6 {
@@ -454,6 +469,7 @@ export class DocumentRenderer {
         (function() {
             let currentZoom = ${this.currentZoom};
             let outlineVisible = ${this.outlineVisible};
+            let currentTheme = '${this.currentTheme}';
             let searchResults = [];
             let currentSearchIndex = -1;
             
@@ -521,6 +537,46 @@ export class DocumentRenderer {
                     visible: outlineVisible
                 });
             });
+            
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                if (currentTheme === 'dark') {
+                    currentTheme = 'light';
+                } else if (currentTheme === 'light') {
+                    currentTheme = 'dark';
+                } else {
+                    // If auto, switch to opposite of current apparent theme
+                    const isDark = document.body.classList.contains('vscode-dark');
+                    currentTheme = isDark ? 'light' : 'dark';
+                }
+                
+                updateTheme();
+                
+                // Send message back to extension
+                vscode.postMessage({
+                    command: 'themeChanged',
+                    theme: currentTheme
+                });
+            });
+            
+            function updateTheme() {
+                const body = document.body;
+                const button = document.getElementById('themeToggle');
+                
+                // Remove existing theme classes
+                body.classList.remove('vscode-light', 'vscode-dark');
+                
+                // Apply new theme
+                if (currentTheme === 'light') {
+                    body.classList.add('vscode-light');
+                    button.textContent = '🌙';
+                    button.title = 'Switch to Dark Mode';
+                } else if (currentTheme === 'dark') {
+                    body.classList.add('vscode-dark');
+                    button.textContent = '☀️';
+                    button.title = 'Switch to Light Mode';
+                }
+            }
             
             // Outline navigation
             document.querySelectorAll('.docx-outline-item').forEach(item => {
@@ -681,6 +737,10 @@ export class DocumentRenderer {
                         outline.classList.toggle('hidden', !outlineVisible);
                         button.textContent = outlineVisible ? '◧' : '◨';
                         break;
+                    case 'updateTheme':
+                        currentTheme = message.theme;
+                        updateTheme();
+                        break;
                 }
             });
             
@@ -722,6 +782,10 @@ export class DocumentRenderer {
 
     public static toggleOutline() {
         this.outlineVisible = !this.outlineVisible;
+    }
+
+    public static updateTheme(theme: string) {
+        this.currentTheme = theme;
     }
 }
 

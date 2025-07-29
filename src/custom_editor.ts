@@ -9,6 +9,7 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     private activeWebviewPanels = new Map<string, vscode.WebviewPanel>();
     private currentZoom = 1.0;
     private outlineVisible = true;
+    private currentTheme = 'auto';
 
     public async resolveCustomEditor(document: vscode.CustomDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
         // Store the webview panel reference
@@ -47,6 +48,10 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
             case 'outlineToggled':
                 this.outlineVisible = message.visible;
                 DocumentRenderer.toggleOutline();
+                break;
+            case 'themeChanged':
+                this.currentTheme = message.theme;
+                DocumentRenderer.updateTheme(this.currentTheme);
                 break;
             case 'error':
                 vscode.window.showErrorMessage(`Document Viewer Error: ${message.message}`);
@@ -87,6 +92,18 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
         await this.sendOutlineUpdate(webviewPanel);
     }
 
+    public async handleToggleTheme(webviewPanel?: vscode.WebviewPanel) {
+        // Cycle through themes: auto -> light -> dark -> auto
+        if (this.currentTheme === 'auto') {
+            this.currentTheme = 'light';
+        } else if (this.currentTheme === 'light') {
+            this.currentTheme = 'dark';
+        } else {
+            this.currentTheme = 'auto';
+        }
+        await this.sendThemeUpdate(webviewPanel);
+    }
+
     private async sendZoomUpdate(webviewPanel?: vscode.WebviewPanel) {
         const panel = webviewPanel || this.getActiveWebviewPanel();
         if (panel) {
@@ -106,6 +123,17 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
                 visible: this.outlineVisible
             });
             DocumentRenderer.toggleOutline();
+        }
+    }
+
+    private async sendThemeUpdate(webviewPanel?: vscode.WebviewPanel) {
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        if (panel) {
+            await panel.webview.postMessage({
+                command: 'updateTheme',
+                theme: this.currentTheme
+            });
+            DocumentRenderer.updateTheme(this.currentTheme);
         }
     }
 

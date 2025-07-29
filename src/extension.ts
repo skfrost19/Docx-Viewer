@@ -35,6 +35,10 @@ export function activate(context: vscode.ExtensionContext) {
         editorProvider.handleToggleOutline();
     }));
 
+    context.subscriptions.push(vscode.commands.registerCommand('docxreader.toggleTheme', () => {
+        editorProvider.handleToggleTheme();
+    }));
+
     // Register status bar update command
     context.subscriptions.push(vscode.commands.registerCommand('docxreader.updateStatusBar', () => {
         updateStatusBar();
