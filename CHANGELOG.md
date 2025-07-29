@@ -5,6 +5,35 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-07-29
+
+### 🎨 Theme Enhancement Update
+
+### Added
+- **Theme Toggle Button** - New button in the toolbar (🌙/☀️) to switch between light and dark modes
+- **Proper Light Mode** - True white background with black text throughout all panels and document content
+- **Enhanced Dark Mode** - Consistent dark background with white text across all interface elements
+- **Visual Theme Feedback** - Button icon changes to indicate current mode and next action
+- **Theme Persistence** - Theme choice is tracked and maintained across the session
+- **VS Code Command Integration** - Added `docxreader.toggleTheme` command for theme switching
+
+### Changed
+- **Improved CSS Architecture** - Enhanced theme variables for better consistency
+- **Better Color Contrast** - Optimized text and background colors for improved readability
+- **Document Background** - Now properly adapts to selected theme (white for light, dark for dark)
+- **Search Highlights** - Theme-appropriate colors (yellow on light, orange on dark)
+
+### Fixed
+- **Theme Inconsistencies** - Resolved cases where some elements didn't follow the selected theme
+- **Document Readability** - Better contrast ratios in both light and dark modes
+
+### Technical
+- Added theme state management in `DocumentRenderer` class
+- Enhanced message passing between webview and extension for theme changes
+- Updated package.json with new theme toggle command and menu item
+
+---
+
 ## [1.2.0] - 2025-07-25
 
 ### 🎉 Major Update - Complete UI Overhaul
@@ -154,34 +183,15 @@ We'd love to hear your feedback on the new features! Please:
 - ⭐ Rate the extension on the VS Code Marketplace
 - 🐛 Report bugs on [GitHub Issues](https://github.com/skfrost19/Docx-Viewer/issues)
 - 💡 Suggest features through GitHub Discussions
-- 📧 Contact the maintainer for questionsog
+- 📧 Contact the maintainer for questions
 
-All notable changes to the "docxreader" extension will be documented in this file.
+---
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## Version History Summary
 
-## [Unreleased]
-
--   Initial release
--   Added gif to README.md
-
-## [0.4.7]
-
--   Removed Warnings
--   May produced gibberish output
-
-## [1.0.0]
-
--   Docx can be opened in the editor just like any other file.
-
-## [1.1.0]
-
--   Added Support for ODT (Open Document Text) files.
-
-## [1.1.2]
-
--   The Docx / ODT output will retain the vscode font.
-
-## [1.1.3]
-
--   Added Custom Font Support
+- **v1.2.1** - Theme toggle enhancement with proper light/dark mode support
+- **v1.2.0** - Major UI overhaul with modern viewer, search, zoom, and outline features  
+- **v1.1.3** - Custom font support
+- **v1.1.2** - VS Code font integration
+- **v1.1.0** - ODT file support
+- **v1.0.0** - Initial DOCX viewer functionality

@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
-  "version": "1.2.0",
+  "version": "1.2.1",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -132,7 +132,19 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "version:patch": "npm version patch && npm run compile",
+    "version:minor": "npm version minor && npm run compile",
+    "version:major": "npm version major && npm run compile",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "release:patch": "npm run version:patch && npm run package",
+    "release:minor": "npm run version:minor && npm run package",
+    "release:major": "npm run version:major && npm run package",
+    "version:check": "node scripts/version.js current",
+    "version:validate": "node scripts/version.js validate",
+    "version:tag": "node scripts/version.js tag",
+    "changelog:template": "node scripts/version.js changelog"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
