@@ -26,10 +26,16 @@ export class DocumentRenderer {
 
             if (docxPath.endsWith('.docx')) {
                 documentHtml = await DocxHandler.renderDocx(docxPath);
-                outline = this.extractOutline(documentHtml);
+                // Process document and extract outline in a coordinated way
+                const processedResult = this.processDocumentAndExtractOutline(documentHtml);
+                documentHtml = processedResult.html;
+                outline = processedResult.outline;
             } else if (docxPath.endsWith('.odt')) {
                 documentHtml = await OdtHandler.renderOdt(docxPath);
-                outline = this.extractOutline(documentHtml);
+                // Process document and extract outline in a coordinated way
+                const processedResult = this.processDocumentAndExtractOutline(documentHtml);
+                documentHtml = processedResult.html;
+                outline = processedResult.outline;
             } else {
                 panel.webview.html = this.getErrorHtml('Unsupported file format', 'Only .docx and .odt files are supported.');
                 return;
@@ -98,7 +104,7 @@ export class DocumentRenderer {
         <!-- Document Content -->
         <div class="docx-content" id="documentContent">
             <div class="docx-document" id="document" style="transform: scale(${this.currentZoom});">
-                ${this.processDocumentHtml(documentHtml)}
+                ${documentHtml}
             </div>
         </div>
     </div>
@@ -110,12 +116,73 @@ export class DocumentRenderer {
 </html>`;
     }
 
+    private static processDocumentAndExtractOutline(html: string): { html: string; outline: OutlineItem[] } {
+        const outline: OutlineItem[] = [];
+        const usedIds = new Set<string>();
+        const headingRegex = /<(h[1-6])[^>]*>(.*?)<\/h[1-6]>/gi;
+        
+        // Process HTML and extract outline in a single pass to ensure consistent IDs
+        const processedHtml = html.replace(headingRegex, (match, tag, content) => {
+            const level = parseInt(tag.substring(1)); // Extract level from h1, h2, etc.
+            const text = content.replace(/<[^>]*>/g, '').trim();
+            
+            if (text) {
+                const id = this.generateUniqueHeadingId(text, usedIds);
+                
+                // Add to outline
+                outline.push({
+                    level,
+                    text,
+                    id
+                });
+                
+                // Return updated heading with unique ID
+                return `<${tag} id="${id}">${content}</${tag}>`;
+            }
+            
+            return match; // Return original if no text content
+        });
+        
+        return {
+            html: processedHtml,
+            outline: outline
+        };
+    }
+
     private static processDocumentHtml(html: string): string {
+        // Track used IDs to ensure uniqueness
+        const usedIds = new Set<string>();
+        
         // Add IDs to headings for navigation
         return html.replace(/<(h[1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, tag, content) => {
-            const id = this.generateHeadingId(content);
+            const id = this.generateUniqueHeadingId(content, usedIds);
             return `<${tag} id="${id}">${content}</${tag}>`;
         });
+    }
+
+    private static generateUniqueHeadingId(text: string, usedIds: Set<string>): string {
+        // Generate base ID from text
+        const baseId = text.toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 50);
+        
+        // If the base ID is unique, use it
+        if (!usedIds.has(baseId)) {
+            usedIds.add(baseId);
+            return baseId;
+        }
+        
+        // If the base ID is already used, append a number to make it unique
+        let counter = 2;
+        let uniqueId = `${baseId}-${counter}`;
+        while (usedIds.has(uniqueId)) {
+            counter++;
+            uniqueId = `${baseId}-${counter}`;
+        }
+        
+        usedIds.add(uniqueId);
+        return uniqueId;
     }
 
     private static generateHeadingId(text: string): string {
@@ -125,27 +192,6 @@ export class DocumentRenderer {
             .substring(0, 50);
     }
 
-    private static extractOutline(html: string): OutlineItem[] {
-        const outline: OutlineItem[] = [];
-        const headingRegex = /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi;
-        let match;
-
-        while ((match = headingRegex.exec(html)) !== null) {
-            const level = parseInt(match[1]);
-            const text = match[2].replace(/<[^>]*>/g, '').trim();
-            const id = this.generateHeadingId(text);
-
-            if (text) {
-                outline.push({
-                    level,
-                    text,
-                    id
-                });
-            }
-        }
-
-        return outline;
-    }
 
     private static generateOutlineHtml(outline: OutlineItem[]): string {
         if (outline.length === 0) {
