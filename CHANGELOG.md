@@ -5,6 +5,22 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-08-24
+
+### 🐛 Bug Fix - Outline Navigation
+
+### Fixed
+- **Duplicate Heading Navigation** - Fixed issue #17 where clicking on outline items with duplicate heading names would always navigate to the first occurrence instead of the correct section
+- **Unique Heading IDs** - Enhanced heading ID generation to ensure each heading gets a unique identifier, even when multiple headings have identical text
+- **Improved Navigation Accuracy** - Outline navigation now correctly jumps to the intended section when multiple subsections share the same name under different parent sections
+
+### Technical
+- Refactored `generateHeadingId` function to include heading index for uniqueness
+- Created combined `processDocumentHtmlAndExtractOutline` function to ensure HTML processing and outline extraction use consistent ID generation
+- Enhanced heading ID algorithm to prevent conflicts in documents with repeated section names
+
+---
+
 ## [1.2.1] - 2025-07-29
 
 ### 🎨 Theme Enhancement Update

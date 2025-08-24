@@ -22,21 +22,21 @@ export class DocumentRenderer {
             this.currentTheme = theme;
 
             let documentHtml = '';
-            let outline: OutlineItem[] = [];
+            let processedData: { html: string; outline: OutlineItem[] };
 
             if (docxPath.endsWith('.docx')) {
                 documentHtml = await DocxHandler.renderDocx(docxPath);
-                outline = this.extractOutline(documentHtml);
+                processedData = this.processDocumentHtmlAndExtractOutline(documentHtml);
             } else if (docxPath.endsWith('.odt')) {
                 documentHtml = await OdtHandler.renderOdt(docxPath);
-                outline = this.extractOutline(documentHtml);
+                processedData = this.processDocumentHtmlAndExtractOutline(documentHtml);
             } else {
                 panel.webview.html = this.getErrorHtml('Unsupported file format', 'Only .docx and .odt files are supported.');
                 return;
             }
 
             // Generate enhanced HTML with modern UI
-            panel.webview.html = this.generateEnhancedHtml(documentHtml, outline, font, theme, docxPath);
+            panel.webview.html = this.generateEnhancedHtml(processedData.html, processedData.outline, font, theme, docxPath);
 
         } catch (error) {
             console.error('Error rendering document:', error);
@@ -98,7 +98,7 @@ export class DocumentRenderer {
         <!-- Document Content -->
         <div class="docx-content" id="documentContent">
             <div class="docx-document" id="document" style="transform: scale(${this.currentZoom});">
-                ${this.processDocumentHtml(documentHtml)}
+                ${documentHtml}
             </div>
         </div>
     </div>
@@ -110,30 +110,15 @@ export class DocumentRenderer {
 </html>`;
     }
 
-    private static processDocumentHtml(html: string): string {
-        // Add IDs to headings for navigation
-        return html.replace(/<(h[1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, tag, content) => {
-            const id = this.generateHeadingId(content);
-            return `<${tag} id="${id}">${content}</${tag}>`;
-        });
-    }
-
-    private static generateHeadingId(text: string): string {
-        return text.toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .substring(0, 50);
-    }
-
-    private static extractOutline(html: string): OutlineItem[] {
+    private static processDocumentHtmlAndExtractOutline(html: string): { html: string; outline: OutlineItem[] } {
         const outline: OutlineItem[] = [];
-        const headingRegex = /<h([1-6])[^>]*>(.*?)<\/h[1-6]>/gi;
-        let match;
+        let headingCounter = 0;
 
-        while ((match = headingRegex.exec(html)) !== null) {
-            const level = parseInt(match[1]);
-            const text = match[2].replace(/<[^>]*>/g, '').trim();
-            const id = this.generateHeadingId(text);
+        // Process HTML and extract outline in a single pass to ensure matching IDs
+        const processedHtml = html.replace(/<(h[1-6])[^>]*>(.*?)<\/h[1-6]>/gi, (match, tag, content) => {
+            const level = parseInt(tag.charAt(1));
+            const text = content.replace(/<[^>]*>/g, '').trim();
+            const id = this.generateHeadingId(text, headingCounter++);
 
             if (text) {
                 outline.push({
@@ -142,9 +127,21 @@ export class DocumentRenderer {
                     id
                 });
             }
-        }
 
-        return outline;
+            return `<${tag} id="${id}">${content}</${tag}>`;
+        });
+
+        return { html: processedHtml, outline };
+    }
+
+    private static generateHeadingId(text: string, index: number): string {
+        const baseId = text.toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .substring(0, 50);
+        
+        // Make ID unique by adding index
+        return `${baseId}-${index}`;
     }
 
     private static generateOutlineHtml(outline: OutlineItem[]): string {

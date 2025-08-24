@@ -133,6 +133,10 @@ code --extensionDevelopmentPath=. --new-window
 - Try opening with another application first
 - Check file permissions
 
+**Outline navigation issues:**
+- If clicking on outline items doesn't navigate correctly, ensure you're using version 1.2.2 or later
+- For documents with duplicate heading names, the extension now correctly navigates to the specific section (fixed in v1.2.2)
+
 **Styling issues:**
 - Verify VS Code theme compatibility
 - Reset zoom to 100%
@@ -153,7 +157,16 @@ code --extensionDevelopmentPath=. --new-window
 
 ## 📝 Changelog
 
-### Version 1.2.0 (Latest)
+### Version 1.2.2 (Latest)
+- 🐛 **Fixed**: Outline navigation for duplicate heading names (Issue #17)
+- 🔧 **Improved**: Enhanced heading ID generation for unique navigation
+- 🔧 **Improved**: Better handling of documents with repeated section names
+
+### Version 1.2.1
+- 🎨 **New**: Theme toggle button for light/dark mode switching
+- 🔧 **Improved**: Enhanced theme consistency across all UI elements
+
+### Version 1.2.0
 - ✨ **New**: Modern UI with VS Code theme integration
 - ✨ **New**: Document outline with navigation
 - ✨ **New**: In-document search functionality
