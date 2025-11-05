@@ -39,6 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
         editorProvider.handleToggleTheme();
     }));
 
+    context.subscriptions.push(vscode.commands.registerCommand('docxreader.toggleToolbar', () => {
+        editorProvider.handleToggleToolbar();
+    }));
+
     // Register status bar update command
     context.subscriptions.push(vscode.commands.registerCommand('docxreader.updateStatusBar', () => {
         updateStatusBar();

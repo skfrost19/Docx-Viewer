@@ -10,6 +10,7 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     private currentZoom = 1.0;
     private outlineVisible = true;
     private currentTheme = 'auto';
+    private toolbarVisible = true;
 
     public async resolveCustomEditor(document: vscode.CustomDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
         // Store the webview panel reference
@@ -52,6 +53,10 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
             case 'themeChanged':
                 this.currentTheme = message.theme;
                 DocumentRenderer.updateTheme(this.currentTheme);
+                break;
+            case 'toolbarToggled':
+                this.toolbarVisible = message.visible;
+                DocumentRenderer.toggleToolbar();
                 break;
             case 'error':
                 vscode.window.showErrorMessage(`Document Viewer Error: ${message.message}`);
@@ -104,6 +109,11 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
         await this.sendThemeUpdate(webviewPanel);
     }
 
+    public async handleToggleToolbar(webviewPanel?: vscode.WebviewPanel) {
+        this.toolbarVisible = !this.toolbarVisible;
+        await this.sendToolbarUpdate(webviewPanel);
+    }
+
     private async sendZoomUpdate(webviewPanel?: vscode.WebviewPanel) {
         const panel = webviewPanel || this.getActiveWebviewPanel();
         if (panel) {
@@ -137,6 +147,17 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
         }
     }
 
+    private async sendToolbarUpdate(webviewPanel?: vscode.WebviewPanel) {
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        if (panel) {
+            await panel.webview.postMessage({
+                command: 'toggleToolbar',
+                visible: this.toolbarVisible
+            });
+            DocumentRenderer.toggleToolbar();
+        }
+    }
+
     private getActiveWebviewPanel(): vscode.WebviewPanel | undefined {
         // Return the first active panel (in a real scenario, you might want to track the focused one)
         const panels = Array.from(this.activeWebviewPanels.values());
@@ -149,6 +170,10 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
 
     public isOutlineVisible(): boolean {
         return this.outlineVisible;
+    }
+
+    public isToolbarVisible(): boolean {
+        return this.toolbarVisible;
     }
 
     public hasActiveWebviewPanels(): boolean {

@@ -7,6 +7,7 @@ export class DocumentRenderer {
     private static currentZoom: number = 1.0;
     private static outlineVisible: boolean = true;
     private static currentTheme: string = 'auto';
+    private static toolbarVisible: boolean = true;
 
     public static async renderDocument(docxPath: string, panel: vscode.WebviewPanel) {
         try {
@@ -71,7 +72,7 @@ export class DocumentRenderer {
 <body class="${themeClass}" style="font-family: ${font};">
     <div class="docx-viewer-container">
         <!-- Toolbar -->
-        <div class="docx-toolbar">
+        <div class="docx-toolbar ${this.toolbarVisible ? '' : 'hidden'}" id="mainToolbar">
             <button id="zoomOut" title="Zoom Out">🔍-</button>
             <span id="zoomLevel">${Math.round(this.currentZoom * 100)}%</span>
             <button id="zoomIn" title="Zoom In">🔍+</button>
@@ -79,6 +80,12 @@ export class DocumentRenderer {
             <button id="toggleOutline" title="Toggle Outline">${this.outlineVisible ? '◧' : '◨'}</button>
             <button id="themeToggle" title="Toggle Theme">${this.currentTheme === 'dark' ? '☀️' : '🌙'}</button>
             <button id="searchBtn" title="Search">🔍</button>
+            <button id="hideToolbar" title="Hide Toolbar">✕</button>
+        </div>
+        
+        <!-- Mini Toolbar Toggle (visible when main toolbar is hidden) -->
+        <div class="docx-mini-toolbar ${this.toolbarVisible ? 'hidden' : ''}" id="miniToolbar">
+            <button id="showToolbar" title="Show Toolbar">⚙️</button>
         </div>
         
         <!-- Search Panel -->
@@ -139,7 +146,7 @@ export class DocumentRenderer {
             .replace(/[^\w\s-]/g, '')
             .replace(/\s+/g, '-')
             .substring(0, 50);
-        
+
         // Make ID unique by adding index
         return `${baseId}-${index}`;
     }
@@ -309,6 +316,45 @@ export class DocumentRenderer {
         .docx-toolbar button:hover { background: var(--viewer-hover); }
         .docx-toolbar button:active { background: var(--viewer-active); color: white; }
         
+        .docx-toolbar.hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .docx-mini-toolbar {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 1001;
+            background: var(--viewer-bg);
+            border: 1px solid var(--viewer-border);
+            border-radius: 4px;
+            padding: 4px;
+            box-shadow: 0 2px 8px var(--viewer-shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .docx-mini-toolbar.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+        
+        .docx-mini-toolbar button {
+            background: transparent;
+            border: 1px solid var(--viewer-border);
+            color: var(--viewer-fg);
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .docx-mini-toolbar button:hover { background: var(--viewer-hover); }
+        .docx-mini-toolbar button:active { background: var(--viewer-active); color: white; }
+        
         #zoomLevel {
             padding: 6px 8px;
             font-size: 12px;
@@ -467,6 +513,7 @@ export class DocumentRenderer {
             let currentZoom = ${this.currentZoom};
             let outlineVisible = ${this.outlineVisible};
             let currentTheme = '${this.currentTheme}';
+            let toolbarVisible = ${this.toolbarVisible};
             let searchResults = [];
             let currentSearchIndex = -1;
             
@@ -572,6 +619,42 @@ export class DocumentRenderer {
                     body.classList.add('vscode-dark');
                     button.textContent = '☀️';
                     button.title = 'Switch to Light Mode';
+                }
+            }
+            
+            // Toolbar toggle
+            document.getElementById('hideToolbar').addEventListener('click', () => {
+                toolbarVisible = false;
+                updateToolbarVisibility();
+                
+                // Send message back to extension
+                vscode.postMessage({
+                    command: 'toolbarToggled',
+                    visible: toolbarVisible
+                });
+            });
+            
+            document.getElementById('showToolbar').addEventListener('click', () => {
+                toolbarVisible = true;
+                updateToolbarVisibility();
+                
+                // Send message back to extension
+                vscode.postMessage({
+                    command: 'toolbarToggled',
+                    visible: toolbarVisible
+                });
+            });
+            
+            function updateToolbarVisibility() {
+                const mainToolbar = document.getElementById('mainToolbar');
+                const miniToolbar = document.getElementById('miniToolbar');
+                
+                if (toolbarVisible) {
+                    mainToolbar.classList.remove('hidden');
+                    miniToolbar.classList.add('hidden');
+                } else {
+                    mainToolbar.classList.add('hidden');
+                    miniToolbar.classList.remove('hidden');
                 }
             }
             
@@ -738,6 +821,10 @@ export class DocumentRenderer {
                         currentTheme = message.theme;
                         updateTheme();
                         break;
+                    case 'toggleToolbar':
+                        toolbarVisible = message.visible;
+                        updateToolbarVisibility();
+                        break;
                 }
             });
             
@@ -762,6 +849,14 @@ export class DocumentRenderer {
                             e.preventDefault();
                             document.getElementById('searchBtn').click();
                             break;
+                        case 'h':
+                            e.preventDefault();
+                            if (toolbarVisible) {
+                                document.getElementById('hideToolbar').click();
+                            } else {
+                                document.getElementById('showToolbar').click();
+                            }
+                            break;
                     }
                 }
                 
@@ -783,6 +878,10 @@ export class DocumentRenderer {
 
     public static updateTheme(theme: string) {
         this.currentTheme = theme;
+    }
+
+    public static toggleToolbar() {
+        this.toolbarVisible = !this.toolbarVisible;
     }
 }
 
