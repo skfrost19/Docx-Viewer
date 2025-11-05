@@ -20,10 +20,10 @@ A modern, feature-rich document viewer for Microsoft Word (.docx) and OpenDocume
 
 ### 🎨 Modern UI & Experience
 - **VS Code Theme Integration** - Automatically adapts to your VS Code theme (dark/light/high contrast)
+- **Toolbar Toggle** - Hide/show toolbar for distraction-free reading experience
 - **Document Outline** - Navigate through headings with an interactive sidebar
 - **Search Functionality** - Find text within documents with highlighting
 - **Zoom Controls** - Zoom in/out with keyboard shortcuts or toolbar buttons
-- **Print Support** - Print documents directly from the viewer
 
 ### 🔧 Enhanced Functionality
 - **Responsive Design** - Adapts to different panel sizes
@@ -37,14 +37,15 @@ A modern, feature-rich document viewer for Microsoft Word (.docx) and OpenDocume
 - `Ctrl+Minus` / `Cmd+Minus` - Zoom Out  
 - `Ctrl+0` / `Cmd+0` - Reset Zoom
 - `Ctrl+F` / `Cmd+F` - Search in Document
-- `Ctrl+P` / `Cmd+P` - Print Document
+- `Ctrl+H` / `Cmd+H` - Toggle Toolbar
 - `Escape` - Close Search Panel
 
 ### 🛠️ Toolbar Features
 - **Zoom Controls** - Precise zoom adjustment (50% to 300%)
 - **Outline Toggle** - Show/hide document structure
+- **Theme Toggle** - Switch between light/dark modes
 - **Search** - Quick text search with navigation
-- **Print** - Direct printing capability
+- **Toolbar Toggle** - Hide toolbar for distraction-free reading
 
 ## 🚀 Installation
 
@@ -86,6 +87,13 @@ Access settings via `Ctrl+Shift+P` → "Open Docx Reader Configuration" or go to
 - **Outline Panel**: Click headings to jump to sections
 - **Search**: Use toolbar search or `Ctrl+F` to find text
 - **Zoom**: Use toolbar buttons or keyboard shortcuts
+- **Toolbar Toggle**: Click the ✕ button to hide toolbar, or press `Ctrl+H` to toggle
+
+### Distraction-Free Reading
+For a cleaner reading experience:
+1. **Hide Toolbar**: Click the ✕ button or press `Ctrl+H`
+2. **Show Toolbar**: Click the ⚙️ gear icon that appears in the top-right corner
+3. **Quick Toggle**: Use `Ctrl+H` keyboard shortcut anytime
 
 ### Document Structure
 The viewer automatically extracts and displays:
@@ -137,6 +145,11 @@ code --extensionDevelopmentPath=. --new-window
 - If clicking on outline items doesn't navigate correctly, ensure you're using version 1.2.2 or later
 - For documents with duplicate heading names, the extension now correctly navigates to the specific section (fixed in v1.2.2)
 
+**Toolbar visibility issues:**
+- If toolbar doesn't hide/show properly, ensure you're using version 1.3.0 or later
+- The mini toggle button (⚙️) appears in the top-right corner when toolbar is hidden
+- Use `Ctrl+H` keyboard shortcut as an alternative to button clicks
+
 **Styling issues:**
 - Verify VS Code theme compatibility
 - Reset zoom to 100%
@@ -157,7 +170,16 @@ code --extensionDevelopmentPath=. --new-window
 
 ## 📝 Changelog
 
-### Version 1.2.2 (Latest)
+### Version 1.3.0 (Latest)
+- ✨ **New**: Toolbar toggle functionality - Hide/show toolbar for distraction-free reading (Fixes #19)
+- ✨ **New**: Mini toolbar toggle button appears when main toolbar is hidden
+- ✨ **New**: Keyboard shortcut `Ctrl+H` to toggle toolbar visibility
+- ✨ **New**: Smooth animations for toolbar transitions
+- ✨ **New**: VS Code command palette integration for toolbar toggle
+- 🔧 **Improved**: Better user experience with non-intrusive design
+- 🔧 **Improved**: Enhanced UI controls for toolbar management
+
+### Version 1.2.2
 - 🐛 **Fixed**: Outline navigation for duplicate heading names (Issue #17)
 - 🔧 **Improved**: Enhanced heading ID generation for unique navigation
 - 🔧 **Improved**: Better handling of documents with repeated section names
