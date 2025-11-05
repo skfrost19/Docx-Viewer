@@ -5,6 +5,36 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-05
+
+### 🎯 Toolbar Toggle Feature
+
+### Added
+- **Toolbar Hide/Show Functionality** - Users can now hide the toolbar for a cleaner, distraction-free reading experience (Fixes #19)
+- **Hide Toolbar Button** - Added close button (✕) to the main toolbar for easy hiding
+- **Mini Toolbar Toggle** - When hidden, a small gear icon (⚙️) appears to restore the toolbar
+- **Keyboard Shortcut** - Press `Ctrl+H` to quickly toggle toolbar visibility
+- **Smooth Animations** - Added CSS transitions for smooth toolbar hide/show animations
+- **VS Code Command Integration** - New `docxreader.toggleToolbar` command available in Command Palette
+
+### Changed
+- **Improved User Experience** - Toolbar can now be completely hidden when not needed, addressing user feedback about distraction
+- **Enhanced UI Design** - Better visual feedback and intuitive controls for toolbar management
+- **Non-intrusive Design** - Mini toggle button is small and positioned out of the way when toolbar is hidden
+
+### Fixed
+- **Toolbar Distraction Issue** - Resolved complaint about inability to close the toolbar (Issue #19)
+- **Screen Real Estate** - Users can now reclaim toolbar space for better document viewing
+
+### Technical
+- Enhanced `DocxEditorProvider` with toolbar visibility state management
+- Added toolbar toggle methods and message handling
+- Updated HTML structure with conditional toolbar visibility classes
+- Implemented `updateToolbarVisibility()` function for seamless state transitions
+- Added keyboard event handler for Ctrl+H shortcut
+
+---
+
 ## [1.2.2] - 2025-08-24
 
 ### 🐛 Bug Fix - Outline Navigation
