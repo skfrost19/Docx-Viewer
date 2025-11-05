@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
-  "version": "1.2.2",
+  "version": "1.3.0",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -79,6 +79,11 @@
         "command": "docxreader.toggleTheme",
         "title": "Toggle Theme",
         "icon": "$(color-mode)"
+      },
+      {
+        "command": "docxreader.toggleToolbar",
+        "title": "Toggle Toolbar",
+        "icon": "$(toolbar)"
       }
     ],
     "customEditors": [
@@ -122,6 +127,11 @@
           "command": "docxreader.toggleTheme",
           "when": "activeCustomEditorId == docxreader.docxEditor",
           "group": "navigation@5"
+        },
+        {
+          "command": "docxreader.toggleToolbar",
+          "when": "activeCustomEditorId == docxreader.docxEditor",
+          "group": "navigation@6"
         }
       ]
     }
