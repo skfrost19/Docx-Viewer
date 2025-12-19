@@ -5,6 +5,15 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-12-19
+
+### 🐛 Bug Fix - Empty Document Handling
+
+### Fixed
+- **Empty DOCX/ODT Files** - Opening a 0-byte `.docx`/`.odt` now renders as an empty document instead of throwing a conversion error (Fixes #22)
+
+---
+
 ## [1.3.0] - 2025-11-05
 
 ### 🎯 Toolbar Toggle Feature
