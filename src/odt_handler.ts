@@ -1,8 +1,14 @@
+import * as fs from 'fs/promises';
+
 const odt2html = require('odt2html');
 
 export class OdtHandler {
     public static async renderOdt(odtPath: string): Promise<string> {
         try {
+            const stat = await fs.stat(odtPath);
+            if (stat.size === 0) {
+                return '';
+            }
             // The odt2html returns promise
             const html = await odt2html.toHTML({
                 path: odtPath
