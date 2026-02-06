@@ -5,6 +5,33 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-02-06
+
+### 🐛 Bug Fix - Light Theme Detection
+
+### Fixed
+- **Light Theme Support** - Fixed issue where the extension ignored VS Code's light theme setting and always displayed in dark mode (Fixes #25)
+- **Auto Theme Detection** - Implemented automatic theme detection using VS Code CSS variables when theme is set to 'auto'
+- **Brightness Calculation** - Added intelligent brightness calculation to determine if the current theme is light or dark
+- **Real-time Theme Switching** - Added MutationObserver to detect and respond to VS Code theme changes in real-time
+
+### Changed
+- **Theme Toggle Behavior** - Theme toggle now cycles through three states: Dark → Light → Auto
+- **Distinct Theme Icons** - Updated theme button with unique emojis for each mode:
+  - ☀️ for Dark mode
+  - 🌙 for Light mode
+  - 🔄 for Auto mode (new)
+- **Improved Theme Button Labels** - Better descriptive titles showing current mode and next action
+
+### Technical
+- Enhanced `generateEnhancedHtml()` to properly handle 'auto' theme mode
+- Added `detectVSCodeTheme()` function for automatic theme detection
+- Implemented `initializeTheme()` to apply correct theme on document load
+- Added DOM observation for dynamic theme changes
+- Updated `updateThemeButton()` with clearer mode indicators
+
+---
+
 ## [1.3.1] - 2025-12-19
 
 ### 🐛 Bug Fix - Empty Document Handling

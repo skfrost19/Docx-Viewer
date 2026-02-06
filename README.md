@@ -43,7 +43,7 @@ A modern, feature-rich document viewer for Microsoft Word (.docx) and OpenDocume
 ### 🛠️ Toolbar Features
 - **Zoom Controls** - Precise zoom adjustment (50% to 300%)
 - **Outline Toggle** - Show/hide document structure
-- **Theme Toggle** - Switch between light/dark modes
+- **Theme Toggle** - Cycle through Auto (🔄) / Light (🌙) / Dark (☀️) modes
 - **Search** - Quick text search with navigation
 - **Toolbar Toggle** - Hide toolbar for distraction-free reading
 
@@ -62,7 +62,7 @@ Access settings via `Ctrl+Shift+P` → "Open Docx Reader Configuration" or go to
 | Setting | Description | Default |
 |---------|-------------|---------|
 | `docxreader.font` | Font family for document rendering | `Arial` |
-| `docxreader.theme` | Theme preference (auto/light/dark) | `auto` |
+| `docxreader.theme` | Theme preference (auto/light/dark). Auto mode detects VS Code theme automatically | `auto` |
 | `docxreader.zoomLevel` | Default zoom level (0.5 - 3.0) | `1.0` |
 | `docxreader.showOutline` | Show document outline by default | `true` |
 
