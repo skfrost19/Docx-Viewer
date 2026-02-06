@@ -54,8 +54,10 @@ export class DocumentRenderer {
             themeClass = 'vscode-dark';
         } else if (this.currentTheme === 'light') {
             themeClass = 'vscode-light';
+        } else {
+            // 'auto' - detect VS Code theme based on CSS variables
+            themeClass = 'vscode-theme-auto';
         }
-        // 'auto' uses default VS Code theme detection
 
         const outlineHtml = this.generateOutlineHtml(outline);
 
@@ -78,7 +80,7 @@ export class DocumentRenderer {
             <button id="zoomIn" title="Zoom In">🔍+</button>
             <button id="resetZoom" title="Reset Zoom">⚊</button>
             <button id="toggleOutline" title="Toggle Outline">${this.outlineVisible ? '◧' : '◨'}</button>
-            <button id="themeToggle" title="Toggle Theme">${this.currentTheme === 'dark' ? '☀️' : '🌙'}</button>
+            <button id="themeToggle" title="Toggle Theme">${this.currentTheme === 'dark' ? '☀️' : this.currentTheme === 'light' ? '🌙' : '🔄'}</button>
             <button id="searchBtn" title="Search">🔍</button>
             <button id="hideToolbar" title="Hide Toolbar">✕</button>
         </div>
@@ -520,6 +522,93 @@ export class DocumentRenderer {
             // Get VS Code API for messaging
             const vscode = acquireVsCodeApi();
             
+            // Auto-detect VS Code theme when 'auto' is selected
+            function detectVSCodeTheme() {
+                if (currentTheme === 'auto') {
+                    // Get computed style from body to read VS Code CSS variables
+                    const computedStyle = getComputedStyle(document.body);
+                    const bgColor = computedStyle.getPropertyValue('--vscode-editor-background').trim();
+                    
+                    // If we can't detect, try to determine from the background color
+                    if (!bgColor) {
+                        // Fallback: check body background color
+                        const bodyBg = computedStyle.backgroundColor;
+                        const rgb = bodyBg.match(/\d+/g);
+                        if (rgb && rgb.length >= 3) {
+                            const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+                            return brightness > 128 ? 'vscode-light' : 'vscode-dark';
+                        }
+                    }
+                    
+                    // Parse the background color to determine if it's dark or light
+                    if (bgColor.startsWith('#')) {
+                        // Hex color
+                        const hex = bgColor.substring(1);
+                        const r = parseInt(hex.substring(0, 2), 16);
+                        const g = parseInt(hex.substring(2, 4), 16);
+                        const b = parseInt(hex.substring(4, 6), 16);
+                        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                        return brightness > 128 ? 'vscode-light' : 'vscode-dark';
+                    } else if (bgColor.startsWith('rgb')) {
+                        // RGB color
+                        const rgb = bgColor.match(/\d+/g);
+                        if (rgb && rgb.length >= 3) {
+                            const brightness = (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+                            return brightness > 128 ? 'vscode-light' : 'vscode-dark';
+                        }
+                    }
+                    
+                    // Default to light if we can't determine
+                    return 'vscode-light';
+                }
+                return null;
+            }
+            
+            // Initialize theme
+            function initializeTheme() {
+                const detectedTheme = detectVSCodeTheme();
+                if (detectedTheme) {
+                    document.body.classList.remove('vscode-theme-auto');
+                    document.body.classList.add(detectedTheme);
+                    updateThemeButton();
+                }
+            }
+            
+            // Initialize theme on load
+            initializeTheme();
+            
+            // Also watch for theme changes from VS Code
+            const observer = new MutationObserver(() => {
+                if (currentTheme === 'auto') {
+                    const detectedTheme = detectVSCodeTheme();
+                    if (detectedTheme) {
+                        document.body.classList.remove('vscode-light', 'vscode-dark', 'vscode-theme-auto');
+                        document.body.classList.add(detectedTheme);
+                        updateThemeButton();
+                    }
+                }
+            });
+            
+            // Observe changes to the body's style attribute (VS Code updates CSS variables)
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['style', 'class']
+            });
+            
+            function updateThemeButton() {
+                const button = document.getElementById('themeToggle');
+                if (currentTheme === 'auto') {
+                    button.textContent = '🔄';
+                    button.title = 'Theme: Auto (Click for Dark)';
+                } else if (currentTheme === 'light') {
+                    button.textContent = '🌙';
+                    button.title = 'Theme: Light (Click for Auto)';
+                } else {
+                    button.textContent = '☀️';
+                    button.title = 'Theme: Dark (Click for Light)';
+                }
+            }
+            
             // Zoom controls
             document.getElementById('zoomIn').addEventListener('click', () => {
                 if (currentZoom < 3.0) {
@@ -587,11 +676,10 @@ export class DocumentRenderer {
                 if (currentTheme === 'dark') {
                     currentTheme = 'light';
                 } else if (currentTheme === 'light') {
-                    currentTheme = 'dark';
+                    currentTheme = 'auto';
                 } else {
-                    // If auto, switch to opposite of current apparent theme
-                    const isDark = document.body.classList.contains('vscode-dark');
-                    currentTheme = isDark ? 'light' : 'dark';
+                    // If auto, switch to dark
+                    currentTheme = 'dark';
                 }
                 
                 updateTheme();
@@ -605,21 +693,26 @@ export class DocumentRenderer {
             
             function updateTheme() {
                 const body = document.body;
-                const button = document.getElementById('themeToggle');
                 
                 // Remove existing theme classes
-                body.classList.remove('vscode-light', 'vscode-dark');
+                body.classList.remove('vscode-light', 'vscode-dark', 'vscode-theme-auto');
                 
                 // Apply new theme
                 if (currentTheme === 'light') {
                     body.classList.add('vscode-light');
-                    button.textContent = '🌙';
-                    button.title = 'Switch to Dark Mode';
                 } else if (currentTheme === 'dark') {
                     body.classList.add('vscode-dark');
-                    button.textContent = '☀️';
-                    button.title = 'Switch to Light Mode';
+                } else if (currentTheme === 'auto') {
+                    body.classList.add('vscode-theme-auto');
+                    // Re-detect and apply the appropriate theme
+                    const detectedTheme = detectVSCodeTheme();
+                    if (detectedTheme) {
+                        body.classList.remove('vscode-theme-auto');
+                        body.classList.add(detectedTheme);
+                    }
                 }
+                
+                updateThemeButton();
             }
             
             // Toolbar toggle
