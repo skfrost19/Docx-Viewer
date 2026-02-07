@@ -169,42 +169,7 @@ code --extensionDevelopmentPath=. --new-window
    - Error messages
 
 ## 📝 Changelog
-
-### Version 1.3.0 (Latest)
-- ✨ **New**: Toolbar toggle functionality - Hide/show toolbar for distraction-free reading (Fixes #19)
-- ✨ **New**: Mini toolbar toggle button appears when main toolbar is hidden
-- ✨ **New**: Keyboard shortcut `Ctrl+H` to toggle toolbar visibility
-- ✨ **New**: Smooth animations for toolbar transitions
-- ✨ **New**: VS Code command palette integration for toolbar toggle
-- 🔧 **Improved**: Better user experience with non-intrusive design
-- 🔧 **Improved**: Enhanced UI controls for toolbar management
-
-### Version 1.2.2
-- 🐛 **Fixed**: Outline navigation for duplicate heading names (Issue #17)
-- 🔧 **Improved**: Enhanced heading ID generation for unique navigation
-- 🔧 **Improved**: Better handling of documents with repeated section names
-
-### Version 1.2.1
-- 🎨 **New**: Theme toggle button for light/dark mode switching
-- 🔧 **Improved**: Enhanced theme consistency across all UI elements
-
-### Version 1.2.0
-- ✨ **New**: Modern UI with VS Code theme integration
-- ✨ **New**: Document outline with navigation
-- ✨ **New**: In-document search functionality
-- ✨ **New**: Zoom controls (50% - 300%)
-- ✨ **New**: Print support
-- ✨ **New**: Keyboard shortcuts
-- ✨ **New**: Status bar integration
-- 🔧 **Improved**: Error handling and loading states
-- 🔧 **Improved**: Performance optimization
-- 🔧 **Updated**: Latest dependencies and security fixes
-- 🔧 **Updated**: TypeScript 5.8+ and ESLint 9+
-
-### Version 1.1.3 (Previous)
-- Basic DOCX and ODT viewing
-- Simple font configuration
-- Basic VS Code integration
+See [Changelog](https://github.com/skfrost19/Docx-Viewer/blob/main/CHANGELOG.md)
 
 ## 🤝 Contributing
 
