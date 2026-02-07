@@ -9,7 +9,8 @@ export class DocumentRenderer {
     private static currentTheme: string = 'auto';
     private static toolbarVisible: boolean = true;
 
-    public static async renderDocument(docxPath: string, panel: vscode.WebviewPanel) {
+    public static async renderDocument(uri: vscode.Uri, panel: vscode.WebviewPanel) {
+        const docxPath = uri.fsPath;
         try {
             // Show loading state
             panel.webview.html = this.getLoadingHtml();
@@ -25,11 +26,11 @@ export class DocumentRenderer {
             let documentHtml = '';
             let processedData: { html: string; outline: OutlineItem[] };
 
-            if (docxPath.endsWith('.docx')) {
-                documentHtml = await DocxHandler.renderDocx(docxPath);
+            if (docxPath.toLowerCase().endsWith('.docx')) {
+                documentHtml = await DocxHandler.renderDocx(uri);
                 processedData = this.processDocumentHtmlAndExtractOutline(documentHtml);
-            } else if (docxPath.endsWith('.odt')) {
-                documentHtml = await OdtHandler.renderOdt(docxPath);
+            } else if (docxPath.toLowerCase().endsWith('.odt')) {
+                documentHtml = await OdtHandler.renderOdt(uri);
                 processedData = this.processDocumentHtmlAndExtractOutline(documentHtml);
             } else {
                 panel.webview.html = this.getErrorHtml('Unsupported file format', 'Only .docx and .odt files are supported.');
@@ -506,6 +507,24 @@ export class DocumentRenderer {
             background: #ff6600;
             color: white;
         }
+
+        .diff-added {
+            background-color: #e6ffec;
+            border-left: 4px solid #2ea043;
+        }
+        body.vscode-dark .diff-added {
+            background-color: rgba(46, 160, 67, 0.15);
+            border-left: 4px solid #2ea043;
+        }
+
+        .diff-removed {
+            background-color: #ffebe9;
+            border-left: 4px solid #ff0000;
+        }
+        body.vscode-dark .diff-removed {
+            background-color: rgba(255, 0, 0, 0.15);
+            border-left: 4px solid #ff0000;
+        }
         `;
     }
 
@@ -895,6 +914,23 @@ export class DocumentRenderer {
                 }
             }
             
+            // Sync Scroll
+            const docContent = document.getElementById('documentContent');
+            let isSyncing = false;
+            
+            if (docContent) {
+                docContent.addEventListener('scroll', () => {
+                    if (!isSyncing) {
+                        const maxScroll = docContent.scrollHeight - docContent.clientHeight;
+                        if (maxScroll > 0) {
+                            const pct = docContent.scrollTop / maxScroll;
+                            vscode.postMessage({ command: 'scroll', scrollPercent: pct });
+                        }
+                    }
+                    isSyncing = false;
+                });
+            }
+
             // Handle messages from extension
             window.addEventListener('message', event => {
                 const message = event.data;
@@ -918,8 +954,40 @@ export class DocumentRenderer {
                         toolbarVisible = message.visible;
                         updateToolbarVisibility();
                         break;
+                    case 'syncScroll':
+                        if (docContent) {
+                            isSyncing = true;
+                            const maxScroll = docContent.scrollHeight - docContent.clientHeight;
+                            docContent.scrollTop = message.scrollPercent * maxScroll;
+                        }
+                        break;
+                    case 'highlight':
+                        highlightDiffs(message.diffs);
+                        break;
                 }
             });
+
+            function highlightDiffs(diffs) {
+                const doc = document.getElementById('document');
+                if (!doc) return;
+                
+                doc.querySelectorAll('.diff-added, .diff-removed').forEach(el => {
+                    el.classList.remove('diff-added', 'diff-removed');
+                });
+
+                const elements = Array.from(doc.children);
+                
+                if (diffs.added) {
+                    diffs.added.forEach(idx => {
+                        if (elements[idx]) elements[idx].classList.add('diff-added');
+                    });
+                }
+                if (diffs.removed) {
+                    diffs.removed.forEach(idx => {
+                        if (elements[idx]) elements[idx].classList.add('diff-removed');
+                    });
+                }
+            }
             
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -986,5 +1054,5 @@ interface OutlineItem {
 
 // Legacy function for backward compatibility
 export async function renderDocuments(docxPath: string, panel: vscode.WebviewPanel) {
-    return DocumentRenderer.renderDocument(docxPath, panel);
+    return DocumentRenderer.renderDocument(vscode.Uri.file(docxPath), panel);
 }

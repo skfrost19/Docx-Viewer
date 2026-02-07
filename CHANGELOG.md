@@ -5,6 +5,29 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-02-07
+
+### ✨ New Features - Git Diff Support & Synchronized Scrolling
+
+### Added
+- **Git Diff Rendering** - Full support for viewing DOCX files in VS Code's built-in diff view (Fixes #11)
+- **Synchronized Scrolling** - When comparing documents side-by-side, scrolling one document automatically scrolls the other (Fixes #9)
+- **Change Highlighting** - Added visual diff highlighting with green backgrounds for additions and red for removals
+- **Git URI Support** - Implemented native Git integration to read historical document versions using `git show`
+- **Multi-panel Tracking** - Extension now tracks multiple panels viewing the same file for diff operations
+
+### Fixed
+- **Git Blob Reading** - Fixed corrupted/truncated data when reading documents from Git history via `vscode.workspace.fs`
+- **Invalid File Handling** - Added graceful fallbacks for Git LFS pointers, empty files, and corrupted documents
+- **ODT URI Support** - Updated ODT handler to support non-file URIs (git:, etc.) with temporary file creation
+
+### Technical
+- Added LCS (Longest Common Subsequence) diff algorithm for paragraph-level comparison
+- Implemented scroll synchronization via message passing between webview panels
+- Enhanced `DocxHandler` with `readFromGit()` method for proper Git object retrieval
+- Added CSS styling for `.diff-added` and `.diff-removed` classes with theme-aware colors
+- Improved error handling with descriptive informational messages instead of crashes
+
 ## [1.3.2] - 2026-02-06
 
 ### 🐛 Bug Fix - Light Theme Detection
