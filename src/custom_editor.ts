@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentRenderer } from './render';
+import { DocxHandler } from './docx_handler';
 
 export class DocxEditorProvider implements vscode.CustomEditorProvider {
 
@@ -7,6 +8,8 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     public readonly onDidChangeCustomDocument = this._onDidChangeCustomDocument.event;
 
     private activeWebviewPanels = new Map<string, vscode.WebviewPanel>();
+    private panelsByPath = new Map<string, vscode.WebviewPanel[]>();
+
     private currentZoom = 1.0;
     private outlineVisible = true;
     private currentTheme = 'auto';
@@ -15,6 +18,12 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     public async resolveCustomEditor(document: vscode.CustomDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
         // Store the webview panel reference
         this.activeWebviewPanels.set(document.uri.toString(), webviewPanel);
+
+        // Track panels by filesystem path to detect diff views
+        const fsPath = document.uri.fsPath;
+        let panels = this.panelsByPath.get(fsPath) || [];
+        panels.push(webviewPanel);
+        this.panelsByPath.set(fsPath, panels);
 
         // Configure webview options
         webviewPanel.webview.options = {
@@ -32,14 +41,33 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
         // Clean up on dispose
         webviewPanel.onDidDispose(() => {
             this.activeWebviewPanels.delete(document.uri.toString());
+
+            const panels = this.panelsByPath.get(fsPath) || [];
+            const idx = panels.indexOf(webviewPanel);
+            if (idx !== -1) {
+                panels.splice(idx, 1);
+                if (panels.length === 0) {
+                    this.panelsByPath.delete(fsPath);
+                } else {
+                    this.panelsByPath.set(fsPath, panels);
+                }
+            }
         });
 
         // Render the initial content
-        await DocumentRenderer.renderDocument(document.uri.fsPath, webviewPanel);
+        await DocumentRenderer.renderDocument(document.uri, webviewPanel);
+
+        // Check if we need to show diffs (more than 1 panel for same file)
+        if (panels.length >= 2) {
+            this.triggerDiffUpdate(fsPath);
+        }
     }
 
-    private async handleWebviewMessage(message: any, _webviewPanel: vscode.WebviewPanel) {
+    private async handleWebviewMessage(message: any, webviewPanel: vscode.WebviewPanel) {
         switch (message.command) {
+            case 'scroll':
+                this.syncScroll(webviewPanel, message.scrollPercent);
+                break;
             case 'zoomChanged':
                 this.currentZoom = message.zoom;
                 DocumentRenderer.updateZoom(this.currentZoom);
@@ -65,6 +93,144 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
                 vscode.window.showInformationMessage(message.message);
                 break;
         }
+    }
+
+    private syncScroll(sourcePanel: vscode.WebviewPanel, scrollPercent: number) {
+        let targetPath: string | undefined;
+        for (const [path, panels] of this.panelsByPath) {
+            if (panels.includes(sourcePanel)) {
+                targetPath = path;
+                break;
+            }
+        }
+
+        if (targetPath) {
+            const panels = this.panelsByPath.get(targetPath);
+            if (panels) {
+                panels.forEach(p => {
+                    if (p !== sourcePanel) {
+                        p.webview.postMessage({ command: 'syncScroll', scrollPercent });
+                    }
+                });
+            }
+        }
+    }
+
+    private async triggerDiffUpdate(fsPath: string) {
+        const panels = this.panelsByPath.get(fsPath);
+        if (!panels || panels.length < 2) return;
+
+        const panelUris: vscode.Uri[] = [];
+        const orderedPanels: vscode.WebviewPanel[] = [];
+
+        for (const p of panels) {
+            for (const [uriStr, activeP] of this.activeWebviewPanels) {
+                if (activeP === p) {
+                    panelUris.push(vscode.Uri.parse(uriStr));
+                    orderedPanels.push(p);
+                    break;
+                }
+            }
+        }
+
+        if (panelUris.length < 2) return;
+
+        try {
+            const html1 = await DocxHandler.renderDocx(panelUris[0]);
+            const html2 = await DocxHandler.renderDocx(panelUris[1]);
+
+            const paras1 = this.extractParagraphText(html1);
+            const paras2 = this.extractParagraphText(html2);
+
+            const diff = this.diffArrays(paras1, paras2);
+
+            const p1Removals: number[] = [];
+            const p2Additions: number[] = [];
+
+            let idx1 = 0;
+            let idx2 = 0;
+
+            diff.forEach(part => {
+                if (part.added) {
+                    for (let i = 0; i < part.count; i++) p2Additions.push(idx2 + i);
+                    idx2 += part.count;
+                } else if (part.removed) {
+                    for (let i = 0; i < part.count; i++) p1Removals.push(idx1 + i);
+                    idx1 += part.count;
+                } else {
+                    idx1 += part.count;
+                    idx2 += part.count;
+                }
+            });
+
+            orderedPanels[0].webview.postMessage({ command: 'highlight', diffs: { removed: p1Removals, added: [] } });
+            orderedPanels[1].webview.postMessage({ command: 'highlight', diffs: { removed: [], added: p2Additions } });
+
+        } catch (error) {
+            console.error('Error computing diff:', error);
+        }
+    }
+
+    private extractParagraphText(html: string): string[] {
+        const matches = html.matchAll(/<(p|h[1-6]|li|div|blockquote)[^>]*>([\s\S]*?)<\/\1>/gi);
+        const results: string[] = [];
+        for (const match of matches) {
+            results.push(match[2].replace(/<[^>]+>/g, '').trim());
+        }
+        return results;
+    }
+
+    private diffArrays(arr1: string[], arr2: string[]): { count: number, added?: boolean, removed?: boolean }[] {
+        const n = arr1.length;
+        const m = arr2.length;
+        const matrix: number[][] = Array(n + 1).fill(0).map(() => Array(m + 1).fill(0));
+
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < m; j++) {
+                if (arr1[i] === arr2[j]) {
+                    matrix[i + 1][j + 1] = matrix[i][j] + 1;
+                } else {
+                    matrix[i + 1][j + 1] = Math.max(matrix[i + 1][j], matrix[i][j + 1]);
+                }
+            }
+        }
+
+        const parts: { count: number, added?: boolean, removed?: boolean }[] = [];
+        let i = n;
+        let j = m;
+
+        const stack: { count: number, added?: boolean, removed?: boolean }[] = [];
+
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && arr1[i - 1] === arr2[j - 1]) {
+                stack.push({ count: 1 });
+                i--;
+                j--;
+            } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
+                stack.push({ count: 1, added: true });
+                j--;
+            } else {
+                stack.push({ count: 1, removed: true });
+                i--;
+            }
+        }
+
+        stack.reverse();
+        if (stack.length > 0) {
+            let current = stack[0];
+            for (let k = 1; k < stack.length; k++) {
+                const next = stack[k];
+                if ((current.added === next.added) && (current.removed === next.removed)) {
+                    current.count += next.count;
+                } else {
+                    parts.push(current);
+                    current = next;
+                }
+            }
+            parts.push(current);
+        }
+
+        return parts;
     }
 
     public async handleZoomIn(webviewPanel?: vscode.WebviewPanel) {

@@ -22,7 +22,7 @@ suite('Extension Test Suite', () => {
         const emptyDocxPath = path.join(tempDir, 'empty.docx');
         await fs.writeFile(emptyDocxPath, Buffer.alloc(0));
 
-        const html = await DocxHandler.renderDocx(emptyDocxPath);
+        const html = await DocxHandler.renderDocx(vscode.Uri.file(emptyDocxPath));
         assert.strictEqual(html, '');
     });
 
@@ -31,7 +31,7 @@ suite('Extension Test Suite', () => {
         const emptyOdtPath = path.join(tempDir, 'empty.odt');
         await fs.writeFile(emptyOdtPath, Buffer.alloc(0));
 
-        const html = await OdtHandler.renderOdt(emptyOdtPath);
+        const html = await OdtHandler.renderOdt(vscode.Uri.file(emptyOdtPath));
         assert.strictEqual(html, '');
     });
 });
