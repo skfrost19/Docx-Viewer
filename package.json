@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
-  "version": "1.4.0",
+  "version": "1.4.1",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -34,7 +34,7 @@
             "light",
             "dark"
           ],
-          "description": "Theme for document viewer"
+          "description": "Theme for document viewer (config takes precedence over system theme). 'auto' follows VS Code theme, 'light' always uses light mode, 'dark' always uses dark mode."
         },
         "docxreader.zoomLevel": {
           "type": "number",

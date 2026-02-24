@@ -16,6 +16,10 @@ export class DocumentRenderer {
             panel.webview.html = this.getLoadingHtml();
 
             // Get configuration
+            // Config theme setting takes precedence over system theme (Fixes #27, refixes #25)
+            // - 'auto': follow VS Code system theme (auto-detect)
+            // - 'light': always use light theme (ignore system theme)
+            // - 'dark': always use dark theme (ignore system theme)
             const config = vscode.workspace.getConfiguration('docxreader');
             const font = config.get('font', 'Arial');
             const theme = config.get('theme', 'auto');
@@ -49,7 +53,7 @@ export class DocumentRenderer {
     private static generateEnhancedHtml(documentHtml: string, outline: OutlineItem[], font: string, theme: string, filePath: string): string {
         const fileName = path.basename(filePath);
 
-        // Determine theme class
+        // Determine theme class (still set on body for auto-detection CSS fallback)
         let themeClass = '';
         if (this.currentTheme === 'dark') {
             themeClass = 'vscode-dark';
@@ -71,6 +75,9 @@ export class DocumentRenderer {
     <style>
         ${this.getInlineCSS()}
     </style>
+    <!-- Theme override: injected by config. Uses !important so VS Code body-class injections cannot override it.
+         For 'auto', this block is empty and body-class-based detection takes over. (Fixes #27, refixes #25) -->
+    <style id="docx-theme-override">${this.getThemeOverrideCSS(this.currentTheme)}</style>
 </head>
 <body class="${themeClass}" style="font-family: ${font};">
     <div class="docx-viewer-container">
@@ -118,6 +125,46 @@ export class DocumentRenderer {
     </script>
 </body>
 </html>`;
+    }
+
+    /**
+     * Returns CSS that hardcodes the viewer theme variables directly on :root using !important.
+     * This takes precedence over any body class VS Code injects into the webview (e.g. vscode-dark).
+     * Returns empty string for 'auto' — in that case body-class detection continues to work. (Fixes #27)
+     */
+    private static getThemeOverrideCSS(theme: string): string {
+        if (theme === 'light') {
+            return `
+        :root {
+            --viewer-bg: #ffffff !important;
+            --viewer-fg: #000000 !important;
+            --viewer-border: #cccccc !important;
+            --viewer-hover: #f0f0f0 !important;
+            --viewer-active: #0078d4 !important;
+            --viewer-shadow: rgba(0, 0, 0, 0.1) !important;
+            --document-bg: #ffffff !important;
+        }
+        body { background: #ffffff !important; color: #000000 !important; }
+        .docx-document { background: #ffffff !important; color: #000000 !important; }
+        `;
+        }
+        if (theme === 'dark') {
+            return `
+        :root {
+            --viewer-bg: #1e1e1e !important;
+            --viewer-fg: #ffffff !important;
+            --viewer-border: #3c3c3c !important;
+            --viewer-hover: #2a2d2e !important;
+            --viewer-active: #0078d4 !important;
+            --viewer-shadow: rgba(255, 255, 255, 0.1) !important;
+            --document-bg: #2d2d30 !important;
+        }
+        body { background: #1e1e1e !important; color: #ffffff !important; }
+        .docx-document { background: #2d2d30 !important; color: #ffffff !important; }
+        `;
+        }
+        // 'auto': no override — body-class detection handles it
+        return '';
     }
 
     private static processDocumentHtmlAndExtractOutline(html: string): { html: string; outline: OutlineItem[] } {
@@ -537,11 +584,13 @@ export class DocumentRenderer {
             let toolbarVisible = ${this.toolbarVisible};
             let searchResults = [];
             let currentSearchIndex = -1;
-            
+
             // Get VS Code API for messaging
             const vscode = acquireVsCodeApi();
             
-            // Auto-detect VS Code theme when 'auto' is selected
+            // Auto-detect VS Code theme ONLY when theme is set to 'auto' in config
+            // When theme is explicitly set to 'light' or 'dark', this returns null
+            // to ensure config setting takes precedence over system theme (Fixes #27, refixes #25)
             function detectVSCodeTheme() {
                 if (currentTheme === 'auto') {
                     // Get computed style from body to read VS Code CSS variables
@@ -583,36 +632,102 @@ export class DocumentRenderer {
                 return null;
             }
             
-            // Initialize theme
-            function initializeTheme() {
-                const detectedTheme = detectVSCodeTheme();
-                if (detectedTheme) {
-                    document.body.classList.remove('vscode-theme-auto');
-                    document.body.classList.add(detectedTheme);
-                    updateThemeButton();
-                }
-            }
-            
-            // Initialize theme on load
-            initializeTheme();
-            
-            // Also watch for theme changes from VS Code
-            const observer = new MutationObserver(() => {
-                if (currentTheme === 'auto') {
-                    const detectedTheme = detectVSCodeTheme();
-                    if (detectedTheme) {
-                        document.body.classList.remove('vscode-light', 'vscode-dark', 'vscode-theme-auto');
-                        document.body.classList.add(detectedTheme);
-                        updateThemeButton();
+            // Apply the config-defined theme to the body, removing any conflicting classes.
+            // This is the single source of truth for theme enforcement.
+            // VS Code's webview runtime automatically injects body classes (e.g. 'vscode-dark')
+            // AFTER the HTML loads, which would override our set class. We must re-enforce
+            // the config theme by stripping VS Code's injected classes. (Fixes #27, refixes #25)
+            function applyConfigTheme() {
+                const body = document.body;
+
+                // Disconnect observer before touching the DOM to avoid triggering ourselves.
+                // MutationObserver fires asynchronously so a simple synchronous flag is not enough.
+                observer.disconnect();
+
+                // Primary fix: update the :root override <style> block.
+                // !important rules here beat any body class VS Code injects. (Fixes #27, refixes #25)
+                const overrideStyle = document.getElementById('docx-theme-override');
+                if (overrideStyle) {
+                    if (currentTheme === 'light') {
+                        overrideStyle.textContent = \`
+                            :root {
+                                --viewer-bg: #ffffff !important;
+                                --viewer-fg: #000000 !important;
+                                --viewer-border: #cccccc !important;
+                                --viewer-hover: #f0f0f0 !important;
+                                --viewer-active: #0078d4 !important;
+                                --viewer-shadow: rgba(0, 0, 0, 0.1) !important;
+                                --document-bg: #ffffff !important;
+                            }
+                            body { background: #ffffff !important; color: #000000 !important; }
+                            .docx-document { background: #ffffff !important; color: #000000 !important; }
+                        \`;
+                    } else if (currentTheme === 'dark') {
+                        overrideStyle.textContent = \`
+                            :root {
+                                --viewer-bg: #1e1e1e !important;
+                                --viewer-fg: #ffffff !important;
+                                --viewer-border: #3c3c3c !important;
+                                --viewer-hover: #2a2d2e !important;
+                                --viewer-active: #0078d4 !important;
+                                --viewer-shadow: rgba(255, 255, 255, 0.1) !important;
+                                --document-bg: #2d2d30 !important;
+                            }
+                            body { background: #1e1e1e !important; color: #ffffff !important; }
+                            .docx-document { background: #2d2d30 !important; color: #ffffff !important; }
+                        \`;
+                    } else {
+                        // 'auto': clear override, let body-class detection work
+                        overrideStyle.textContent = '';
                     }
                 }
+
+                // Sync body class for any CSS rules that target body.vscode-light/dark
+                body.classList.remove('vscode-light', 'vscode-dark', 'vscode-theme-auto');
+                if (currentTheme === 'light') {
+                    body.classList.add('vscode-light');
+                } else if (currentTheme === 'dark') {
+                    body.classList.add('vscode-dark');
+                } else {
+                    const detectedTheme = detectVSCodeTheme();
+                    body.classList.add(detectedTheme || 'vscode-light');
+                }
+
+                // Reconnect observer now that our DOM changes are done
+                observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+
+                updateThemeButton();
+            }
+
+            // Initialize theme
+            // Defer slightly so VS Code's own body-class injection (which happens post-load)
+            // is detected and overridden when an explicit theme is configured.
+            function initializeTheme() {
+                applyConfigTheme();
+                // Re-apply after a tick to catch VS Code's post-load body class injection
+                setTimeout(applyConfigTheme, 0);
+            }
+            
+            // Set up the MutationObserver BEFORE calling initializeTheme(), so that
+            // applyConfigTheme() can safely call observer.disconnect()/observe() on first run.
+            // (const is in the temporal dead zone until this line executes)
+            const observer = new MutationObserver(() => {
+                applyConfigTheme();
             });
             
-            // Observe changes to the body's style attribute (VS Code updates CSS variables)
+            // Start observing before we call initializeTheme
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class', 'style']
+            });
             observer.observe(document.documentElement, {
                 attributes: true,
-                attributeFilter: ['style', 'class']
+                attributeFilter: ['class', 'style']
             });
+
+            // Initialize theme on load (observer is now ready)
+            initializeTheme();
             
             function updateThemeButton() {
                 const button = document.getElementById('themeToggle');
@@ -711,27 +826,9 @@ export class DocumentRenderer {
             });
             
             function updateTheme() {
-                const body = document.body;
-                
-                // Remove existing theme classes
-                body.classList.remove('vscode-light', 'vscode-dark', 'vscode-theme-auto');
-                
-                // Apply new theme
-                if (currentTheme === 'light') {
-                    body.classList.add('vscode-light');
-                } else if (currentTheme === 'dark') {
-                    body.classList.add('vscode-dark');
-                } else if (currentTheme === 'auto') {
-                    body.classList.add('vscode-theme-auto');
-                    // Re-detect and apply the appropriate theme
-                    const detectedTheme = detectVSCodeTheme();
-                    if (detectedTheme) {
-                        body.classList.remove('vscode-theme-auto');
-                        body.classList.add(detectedTheme);
-                    }
-                }
-                
-                updateThemeButton();
+                // Delegate to applyConfigTheme() which enforces the theme correctly
+                // and handles the MutationObserver guard
+                applyConfigTheme();
             }
             
             // Toolbar toggle
