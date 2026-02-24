@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
-  "version": "1.4.1",
+  "version": "1.4.2",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -101,40 +101,7 @@
         ]
       }
     ],
-    "menus": {
-      "editor/title": [
-        {
-          "command": "docxreader.zoomIn",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@1"
-        },
-        {
-          "command": "docxreader.zoomOut",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@2"
-        },
-        {
-          "command": "docxreader.resetZoom",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@3"
-        },
-        {
-          "command": "docxreader.toggleOutline",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@4"
-        },
-        {
-          "command": "docxreader.toggleTheme",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@5"
-        },
-        {
-          "command": "docxreader.toggleToolbar",
-          "when": "activeCustomEditorId == docxreader.docxEditor",
-          "group": "navigation@6"
-        }
-      ]
-    }
+    "menus": {}
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

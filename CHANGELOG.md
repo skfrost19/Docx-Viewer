@@ -5,6 +5,19 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] - 2026-02-24
+
+### 🐛 Bug Fixes - Toolbar & Per-Document State
+
+### Fixed
+- **Duplicate Toolbar** - Removed redundant VSCode editor title bar buttons; only the in-webview toolbar is now shown, which contains all controls including reset zoom and toggle toolbar (was missing from the top bar)
+- **Toolbar Collapsed by Default** - The toolbar now starts hidden on document open; click the ⚙️ mini-button to expand it
+- **Per-Document State** - Each opened document now has its own independent zoom, outline, and toolbar state; previously opening a second file would inherit the zoom level of the first (e.g. 150%)
+- **Renderer State Sync** - The renderer now correctly receives per-document initial state (zoom, outlineVisible, toolbarVisible) instead of using its own stale static fields
+- **Config Theme Precedence Preserved** - The `docxreader.theme` config setting continues to always take precedence; the per-document state refactor does not override it
+
+---
+
 ## [1.4.1] - 2026-02-24
 
 ### 🐛 Bug Fix - Theme Config Takes Precedence Over System Theme
