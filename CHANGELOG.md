@@ -5,6 +5,31 @@ All notable changes to the "Enhanced Docx/ODT Viewer" extension will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-02-24
+
+### 🐛 Bug Fix - Theme Config Takes Precedence Over System Theme
+
+### Fixed
+- **Theme Config Precedence** - The `docxreader.theme` setting (configurable via `Ctrl+Shift+P` → "Open Docx Reader Configuration") now correctly takes precedence over VS Code's system theme (Fixes #27, refixes #25)
+- **Light Theme in Dark VS Code** - Setting `docxreader.theme` to `light` now correctly renders the document in light mode even when VS Code itself uses a dark theme, and vice-versa for `dark`
+
+### Changed
+- **Theme Behavior**:
+  - `auto` (default): follows VS Code's system theme automatically
+  - `light`: always uses light mode regardless of VS Code theme
+  - `dark`: always uses dark mode regardless of VS Code theme
+- **Improved theme setting description** in settings UI to clarify precedence rules
+
+### Technical
+- Root cause: VS Code's webview runtime automatically injects body classes (e.g. `vscode-dark`) onto `<body>` **after** the HTML loads, silently overriding the configured theme
+- Fix: injected a `<style id="docx-theme-override">` block in `<head>` that sets all CSS variables with `!important` directly on `:root` when an explicit theme is configured. `!important` `:root` rules have higher specificity than any `body.vscode-dark` rule and cannot be overridden by VS Code's body-class injections
+- For `auto` mode the override block is empty and existing VS Code body-class detection continues to work unchanged
+- `applyConfigTheme()` in the webview script updates the `<style id="docx-theme-override">` block so the toolbar theme toggle button also benefits from the same fix
+- `MutationObserver` + `setTimeout(0)` re-enforcement retained as a secondary safety net
+- Added `_enforcingTheme` flag to prevent infinite MutationObserver feedback loops
+
+---
+
 ## [1.4.0] - 2026-02-07
 
 ### ✨ New Features - Git Diff Support & Synchronized Scrolling
