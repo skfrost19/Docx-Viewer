@@ -2,6 +2,13 @@ import * as vscode from 'vscode';
 import { DocumentRenderer } from './render';
 import { DocxHandler } from './docx_handler';
 
+interface DocumentState {
+    zoom: number;
+    outlineVisible: boolean;
+    currentTheme: string;
+    toolbarVisible: boolean;
+}
+
 export class DocxEditorProvider implements vscode.CustomEditorProvider {
 
     private readonly _onDidChangeCustomDocument = new vscode.EventEmitter<vscode.CustomDocumentEditEvent<vscode.CustomDocument>>();
@@ -9,15 +16,42 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
 
     private activeWebviewPanels = new Map<string, vscode.WebviewPanel>();
     private panelsByPath = new Map<string, vscode.WebviewPanel[]>();
+    private panelToUri = new Map<vscode.WebviewPanel, string>(); // reverse lookup
 
-    private currentZoom = 1.0;
-    private outlineVisible = true;
-    private currentTheme = 'auto';
-    private toolbarVisible = true;
+    // Per-document state — keyed by URI string so each file has independent zoom/outline/toolbar
+    private documentStates = new Map<string, DocumentState>();
+
+    private getOrCreateState(uriString: string): DocumentState {
+        if (!this.documentStates.has(uriString)) {
+            const config = vscode.workspace.getConfiguration('docxreader');
+            this.documentStates.set(uriString, {
+                zoom: config.get<number>('zoomLevel', 1.0),
+                outlineVisible: config.get<boolean>('showOutline', true),
+                currentTheme: config.get<string>('theme', 'auto'),
+                toolbarVisible: false
+            });
+        }
+        return this.documentStates.get(uriString)!;
+    }
+
+    private getStateForPanel(panel: vscode.WebviewPanel): DocumentState | undefined {
+        const uri = this.panelToUri.get(panel);
+        return uri ? this.documentStates.get(uri) : undefined;
+    }
+
+    private getActiveState(): DocumentState | undefined {
+        const panel = this.getActiveWebviewPanel();
+        return panel ? this.getStateForPanel(panel) : undefined;
+    }
 
     public async resolveCustomEditor(document: vscode.CustomDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
         // Store the webview panel reference
-        this.activeWebviewPanels.set(document.uri.toString(), webviewPanel);
+        const uriString = document.uri.toString();
+        this.activeWebviewPanels.set(uriString, webviewPanel);
+        this.panelToUri.set(webviewPanel, uriString);
+
+        // Initialize fresh per-document state for this URI
+        this.getOrCreateState(uriString);
 
         // Track panels by filesystem path to detect diff views
         const fsPath = document.uri.fsPath;
@@ -40,7 +74,9 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
 
         // Clean up on dispose
         webviewPanel.onDidDispose(() => {
-            this.activeWebviewPanels.delete(document.uri.toString());
+            this.activeWebviewPanels.delete(uriString);
+            this.panelToUri.delete(webviewPanel);
+            this.documentStates.delete(uriString);
 
             const panels = this.panelsByPath.get(fsPath) || [];
             const idx = panels.indexOf(webviewPanel);
@@ -54,8 +90,14 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
             }
         });
 
-        // Render the initial content
-        await DocumentRenderer.renderDocument(document.uri, webviewPanel);
+        // Render the initial content — pass per-document state so the renderer
+        // uses the correct state for this specific file
+        const state = this.getOrCreateState(uriString);
+        await DocumentRenderer.renderDocument(document.uri, webviewPanel, {
+            zoom: state.zoom,
+            outlineVisible: state.outlineVisible,
+            toolbarVisible: state.toolbarVisible
+        });
 
         // Check if we need to show diffs (more than 1 panel for same file)
         if (panels.length >= 2) {
@@ -64,26 +106,29 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     }
 
     private async handleWebviewMessage(message: any, webviewPanel: vscode.WebviewPanel) {
+        const uri = this.panelToUri.get(webviewPanel);
+        const state = uri ? this.documentStates.get(uri) : undefined;
+
         switch (message.command) {
             case 'scroll':
                 this.syncScroll(webviewPanel, message.scrollPercent);
                 break;
             case 'zoomChanged':
-                this.currentZoom = message.zoom;
-                DocumentRenderer.updateZoom(this.currentZoom);
+                if (state) { state.zoom = message.zoom; }
+                DocumentRenderer.updateZoom(message.zoom);
                 // Notify extension about zoom change for status bar update
                 vscode.commands.executeCommand('docxreader.updateStatusBar');
                 break;
             case 'outlineToggled':
-                this.outlineVisible = message.visible;
+                if (state) { state.outlineVisible = message.visible; }
                 DocumentRenderer.toggleOutline();
                 break;
             case 'themeChanged':
-                this.currentTheme = message.theme;
-                DocumentRenderer.updateTheme(this.currentTheme);
+                if (state) { state.currentTheme = message.theme; }
+                DocumentRenderer.updateTheme(message.theme);
                 break;
             case 'toolbarToggled':
-                this.toolbarVisible = message.visible;
+                if (state) { state.toolbarVisible = message.visible; }
                 DocumentRenderer.toggleToolbar();
                 break;
             case 'error':
@@ -234,92 +279,89 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     }
 
     public async handleZoomIn(webviewPanel?: vscode.WebviewPanel) {
-        if (this.currentZoom < 3.0) {
-            this.currentZoom = Math.min(3.0, this.currentZoom + 0.1);
-            await this.sendZoomUpdate(webviewPanel);
-            // Notify extension about zoom change for status bar update
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state && state.zoom < 3.0) {
+            state.zoom = Math.min(3.0, parseFloat((state.zoom + 0.1).toFixed(1)));
+            await this.sendZoomUpdate(panel, state.zoom);
             vscode.commands.executeCommand('docxreader.updateStatusBar');
         }
     }
 
     public async handleZoomOut(webviewPanel?: vscode.WebviewPanel) {
-        if (this.currentZoom > 0.5) {
-            this.currentZoom = Math.max(0.5, this.currentZoom - 0.1);
-            await this.sendZoomUpdate(webviewPanel);
-            // Notify extension about zoom change for status bar update
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state && state.zoom > 0.5) {
+            state.zoom = Math.max(0.5, parseFloat((state.zoom - 0.1).toFixed(1)));
+            await this.sendZoomUpdate(panel, state.zoom);
             vscode.commands.executeCommand('docxreader.updateStatusBar');
         }
     }
 
     public async handleResetZoom(webviewPanel?: vscode.WebviewPanel) {
-        this.currentZoom = 1.0;
-        await this.sendZoomUpdate(webviewPanel);
-        // Notify extension about zoom change for status bar update
-        vscode.commands.executeCommand('docxreader.updateStatusBar');
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state) {
+            state.zoom = 1.0;
+            await this.sendZoomUpdate(panel, state.zoom);
+            vscode.commands.executeCommand('docxreader.updateStatusBar');
+        }
     }
 
     public async handleToggleOutline(webviewPanel?: vscode.WebviewPanel) {
-        this.outlineVisible = !this.outlineVisible;
-        await this.sendOutlineUpdate(webviewPanel);
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state) {
+            state.outlineVisible = !state.outlineVisible;
+            await this.sendOutlineUpdate(panel, state.outlineVisible);
+        }
     }
 
     public async handleToggleTheme(webviewPanel?: vscode.WebviewPanel) {
-        // Cycle through themes: auto -> light -> dark -> auto
-        if (this.currentTheme === 'auto') {
-            this.currentTheme = 'light';
-        } else if (this.currentTheme === 'light') {
-            this.currentTheme = 'dark';
-        } else {
-            this.currentTheme = 'auto';
+        const panel = webviewPanel || this.getActiveWebviewPanel();
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state) {
+            // Cycle through themes: auto -> light -> dark -> auto
+            if (state.currentTheme === 'auto') { state.currentTheme = 'light'; }
+            else if (state.currentTheme === 'light') { state.currentTheme = 'dark'; }
+            else { state.currentTheme = 'auto'; }
+            await this.sendThemeUpdate(panel, state.currentTheme);
         }
-        await this.sendThemeUpdate(webviewPanel);
     }
 
     public async handleToggleToolbar(webviewPanel?: vscode.WebviewPanel) {
-        this.toolbarVisible = !this.toolbarVisible;
-        await this.sendToolbarUpdate(webviewPanel);
-    }
-
-    private async sendZoomUpdate(webviewPanel?: vscode.WebviewPanel) {
         const panel = webviewPanel || this.getActiveWebviewPanel();
-        if (panel) {
-            await panel.webview.postMessage({
-                command: 'updateZoom',
-                zoom: this.currentZoom
-            });
-            DocumentRenderer.updateZoom(this.currentZoom);
+        const state = panel ? this.getStateForPanel(panel) : undefined;
+        if (state) {
+            state.toolbarVisible = !state.toolbarVisible;
+            await this.sendToolbarUpdate(panel, state.toolbarVisible);
         }
     }
 
-    private async sendOutlineUpdate(webviewPanel?: vscode.WebviewPanel) {
-        const panel = webviewPanel || this.getActiveWebviewPanel();
+    private async sendZoomUpdate(panel: vscode.WebviewPanel | undefined, zoom: number) {
         if (panel) {
-            await panel.webview.postMessage({
-                command: 'toggleOutline',
-                visible: this.outlineVisible
-            });
+            await panel.webview.postMessage({ command: 'updateZoom', zoom });
+            DocumentRenderer.updateZoom(zoom);
+        }
+    }
+
+    private async sendOutlineUpdate(panel: vscode.WebviewPanel | undefined, visible: boolean) {
+        if (panel) {
+            await panel.webview.postMessage({ command: 'toggleOutline', visible });
             DocumentRenderer.toggleOutline();
         }
     }
 
-    private async sendThemeUpdate(webviewPanel?: vscode.WebviewPanel) {
-        const panel = webviewPanel || this.getActiveWebviewPanel();
+    private async sendThemeUpdate(panel: vscode.WebviewPanel | undefined, theme: string) {
         if (panel) {
-            await panel.webview.postMessage({
-                command: 'updateTheme',
-                theme: this.currentTheme
-            });
-            DocumentRenderer.updateTheme(this.currentTheme);
+            await panel.webview.postMessage({ command: 'updateTheme', theme });
+            DocumentRenderer.updateTheme(theme);
         }
     }
 
-    private async sendToolbarUpdate(webviewPanel?: vscode.WebviewPanel) {
-        const panel = webviewPanel || this.getActiveWebviewPanel();
+    private async sendToolbarUpdate(panel: vscode.WebviewPanel | undefined, visible: boolean) {
         if (panel) {
-            await panel.webview.postMessage({
-                command: 'toggleToolbar',
-                visible: this.toolbarVisible
-            });
+            await panel.webview.postMessage({ command: 'toggleToolbar', visible });
             DocumentRenderer.toggleToolbar();
         }
     }
@@ -331,15 +373,15 @@ export class DocxEditorProvider implements vscode.CustomEditorProvider {
     }
 
     public getCurrentZoom(): number {
-        return this.currentZoom;
+        return this.getActiveState()?.zoom ?? 1.0;
     }
 
     public isOutlineVisible(): boolean {
-        return this.outlineVisible;
+        return this.getActiveState()?.outlineVisible ?? true;
     }
 
     public isToolbarVisible(): boolean {
-        return this.toolbarVisible;
+        return this.getActiveState()?.toolbarVisible ?? false;
     }
 
     public hasActiveWebviewPanels(): boolean {

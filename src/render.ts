@@ -7,9 +7,9 @@ export class DocumentRenderer {
     private static currentZoom: number = 1.0;
     private static outlineVisible: boolean = true;
     private static currentTheme: string = 'auto';
-    private static toolbarVisible: boolean = true;
+    private static toolbarVisible: boolean = false;
 
-    public static async renderDocument(uri: vscode.Uri, panel: vscode.WebviewPanel) {
+    public static async renderDocument(uri: vscode.Uri, panel: vscode.WebviewPanel, initialState?: { zoom?: number; outlineVisible?: boolean; toolbarVisible?: boolean }) {
         const docxPath = uri.fsPath;
         try {
             // Show loading state
@@ -23,9 +23,15 @@ export class DocumentRenderer {
             const config = vscode.workspace.getConfiguration('docxreader');
             const font = config.get('font', 'Arial');
             const theme = config.get('theme', 'auto');
-            this.currentZoom = config.get('zoomLevel', 1.0);
-            this.outlineVisible = config.get('showOutline', true);
-            this.currentTheme = theme;
+            // Use caller-supplied state when provided, otherwise fall back to config defaults.
+            // NOTE: theme always comes from config (config takes precedence over runtime toggle state)
+            // to preserve the fix for #27 / #25.
+            this.currentZoom = initialState?.zoom ?? config.get('zoomLevel', 1.0);
+            this.outlineVisible = initialState?.outlineVisible ?? config.get('showOutline', true);
+            this.currentTheme = theme; // always config — never initialState.theme
+            if (initialState?.toolbarVisible !== undefined) {
+                this.toolbarVisible = initialState.toolbarVisible;
+            }
 
             let documentHtml = '';
             let processedData: { html: string; outline: OutlineItem[] };
