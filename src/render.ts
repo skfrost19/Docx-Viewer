@@ -107,6 +107,7 @@ export class DocumentRenderer {
         <!-- Search Panel -->
         <div class="docx-search" id="searchPanel">
             <input type="text" id="searchInput" placeholder="Search in document...">
+            <span id="searchCount" class="search-count">0/0</span>
             <button id="searchPrev" title="Previous">↑</button>
             <button id="searchNext" title="Next">↓</button>
             <button id="closeSearch" title="Close">✕</button>
@@ -536,6 +537,16 @@ export class DocumentRenderer {
             font-size: 12px;
             width: 200px;
         }
+
+        .search-count {
+            min-width: 42px;
+            text-align: center;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            color: var(--viewer-fg);
+            opacity: 0.8;
+            padding: 4px 2px;
+        }
         
         .docx-search button {
             background: transparent;
@@ -558,6 +569,11 @@ export class DocumentRenderer {
         
         body.vscode-dark .search-highlight {
             background: #ff6600;
+            color: white;
+        }
+
+        .search-highlight.current {
+            background: #ff3b30;
             color: white;
         }
 
@@ -590,6 +606,7 @@ export class DocumentRenderer {
             let toolbarVisible = ${this.toolbarVisible};
             let searchResults = [];
             let currentSearchIndex = -1;
+            let activeSearchElement = null;
 
             // Get VS Code API for messaging
             const vscode = acquireVsCodeApi();
@@ -909,12 +926,34 @@ export class DocumentRenderer {
             document.getElementById('searchInput').addEventListener('input', performSearch);
             document.getElementById('searchNext').addEventListener('click', () => navigateSearch(1));
             document.getElementById('searchPrev').addEventListener('click', () => navigateSearch(-1));
+
+            function updateSearchCounter() {
+                const counter = document.getElementById('searchCount');
+                const total = searchResults.length;
+                const current = total > 0 && currentSearchIndex >= 0 ? currentSearchIndex + 1 : 0;
+
+                counter.textContent = current + '/' + total;
+            }
+
+            function updateSearchControls() {
+                const hasResults = searchResults.length > 0;
+                document.getElementById('searchNext').disabled = !hasResults;
+                document.getElementById('searchPrev').disabled = !hasResults;
+                updateSearchCounter();
+            }
+
+            function escapeRegExp(value) {
+                return value.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+            }
             
             function performSearch() {
                 const searchTerm = document.getElementById('searchInput').value.trim();
                 clearSearchResults();
                 
-                if (searchTerm.length < 2) return;
+                if (searchTerm.length === 0) {
+                    updateSearchControls();
+                    return;
+                }
                 
                 const content = document.getElementById('document');
                 const walker = document.createTreeWalker(
@@ -931,51 +970,48 @@ export class DocumentRenderer {
                 }
                 
                 searchResults = [];
+                const regex = new RegExp(escapeRegExp(searchTerm), 'gi');
                 textNodes.forEach(textNode => {
-                    const text = textNode.textContent;
-                    const regex = new RegExp(searchTerm, 'gi');
+                    const text = textNode.textContent || '';
                     let match;
+
+                    regex.lastIndex = 0;
+                    if (!regex.test(text)) {
+                        return;
+                    }
+
+                    regex.lastIndex = 0;
+                    const fragment = document.createDocumentFragment();
+                    let lastIndex = 0;
                     
                     while ((match = regex.exec(text)) !== null) {
-                        searchResults.push({
-                            node: textNode,
-                            start: match.index,
-                            length: match[0].length
-                        });
+                        if (match.index > lastIndex) {
+                            fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                        }
+
+                        const highlightSpan = document.createElement('span');
+                        highlightSpan.className = 'search-highlight';
+                        highlightSpan.textContent = match[0];
+                        fragment.appendChild(highlightSpan);
+
+                        searchResults.push({ element: highlightSpan });
+                        lastIndex = match.index + match[0].length;
                     }
+
+                    if (lastIndex < text.length) {
+                        fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+                    }
+
+                    textNode.parentNode.replaceChild(fragment, textNode);
                 });
                 
-                highlightSearchResults();
                 if (searchResults.length > 0) {
                     currentSearchIndex = 0;
                     navigateToSearchResult(0);
+                } else {
+                    currentSearchIndex = -1;
+                    updateSearchControls();
                 }
-            }
-            
-            function highlightSearchResults() {
-                searchResults.forEach(result => {
-                    const textNode = result.node;
-                    const parent = textNode.parentNode;
-                    const text = textNode.textContent;
-                    
-                    const before = text.substring(0, result.start);
-                    const match = text.substring(result.start, result.start + result.length);
-                    const after = text.substring(result.start + result.length);
-                    
-                    const highlightSpan = document.createElement('span');
-                    highlightSpan.className = 'search-highlight';
-                    highlightSpan.textContent = match;
-                    
-                    const beforeNode = document.createTextNode(before);
-                    const afterNode = document.createTextNode(after);
-                    
-                    parent.insertBefore(beforeNode, textNode);
-                    parent.insertBefore(highlightSpan, textNode);
-                    parent.insertBefore(afterNode, textNode);
-                    parent.removeChild(textNode);
-                    
-                    result.element = highlightSpan;
-                });
             }
             
             function clearSearchResults() {
@@ -986,6 +1022,8 @@ export class DocumentRenderer {
                 });
                 searchResults = [];
                 currentSearchIndex = -1;
+                activeSearchElement = null;
+                updateSearchControls();
             }
             
             function navigateSearch(direction) {
@@ -1003,19 +1041,18 @@ export class DocumentRenderer {
                 
                 const result = searchResults[index];
                 if (result.element) {
+                    if (activeSearchElement) {
+                        activeSearchElement.classList.remove('current');
+                    }
+
+                    result.element.classList.add('current');
+                    activeSearchElement = result.element;
                     result.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Temporarily highlight current result
-                    result.element.style.background = '#ff0000';
-                    setTimeout(() => {
-                        if (document.body.classList.contains('vscode-dark')) {
-                            result.element.style.background = '#ff6600';
-                        } else {
-                            result.element.style.background = 'yellow';
-                        }
-                    }, 500);
+                    updateSearchControls();
                 }
             }
+
+            updateSearchControls();
             
             // Sync Scroll
             const docContent = document.getElementById('documentContent');

@@ -137,7 +137,6 @@
   },
   "dependencies": {
     "mammoth": "^1.12.1",
-    "odt2html": "^1.0.1",
-    "vsce": "^2.15.0"
+    "odt2html": "^1.0.1"
   }
 }
