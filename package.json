@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/skfrost19/Docx-Viewer.git"
   },
-  "version": "1.4.2",
+  "version": "1.4.3",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -136,7 +136,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "mammoth": "^1.8.0",
+    "mammoth": "^1.12.1",
     "odt2html": "^1.0.1"
   }
 }
